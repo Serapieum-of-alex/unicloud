@@ -15,11 +15,11 @@ build:
 
 python:
   install:
-    - method: pip
+    - method: poetry
       path: .
     - requirements: docs/requirements.txt
-      extra_requirements:
-        - docs
+#       extra_requirements:
+#         - docs
 
 # Optionally build your docs in additional formats such as PDF and ePub
 formats: all
