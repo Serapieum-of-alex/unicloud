@@ -46,3 +46,12 @@ html_theme_options = {
 }
 
 html_static_path = ["_static"]
+
+# Custom sidebar templates, maps document names to template names.
+html_sidebars = {
+    "**": [
+        "globaltoc.html",
+        "relations.html",  # needs 'show_related': True theme option to display
+        "searchbox.html",
+    ]
+}
