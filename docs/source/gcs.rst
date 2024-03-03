@@ -43,3 +43,8 @@ The ``GCS`` class provides methods to interact with Google Cloud Storage (GCS), 
 
          gcs_client = GCS('my-gcp-project')
          gcs_client.download_data('bucket-name/object-name.txt', '/local/path/to/save/file.txt')
+
+.. automodule:: gcs
+   :members:
+   :undoc-members:
+   :show-inheritance:
