@@ -16,7 +16,7 @@ build:
 python:
   install:
     - requirements: docs/requirements.txt
-    - method: poetry
+    - method: pip
       path: .
 
 # Optionally build your docs in additional formats such as PDF and ePub
