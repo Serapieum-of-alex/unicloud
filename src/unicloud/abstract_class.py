@@ -13,7 +13,7 @@ class CloudStorageFactory(ABC):
         pass
 
     @abstractmethod
-    def upload_data(self, file_path, destination):
+    def upload(self, file_path, destination):
         """Upload data to the cloud storage.
 
         Parameters:
@@ -23,7 +23,7 @@ class CloudStorageFactory(ABC):
         pass
 
     @abstractmethod
-    def download_data(self, source, file_path):
+    def download(self, source, file_path):
         """Download data from the cloud storage.
 
         Parameters:

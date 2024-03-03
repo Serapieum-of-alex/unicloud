@@ -83,14 +83,32 @@ class GCS(CloudStorageFactory):
 
         return client
 
-    def upload_data(self, file_path, destination):
+    def upload(self, file_path: str, destination: str):
+        """Upload a file to GCS.
+
+        Parameters
+        ----------
+        file_path: [str]
+            The path to the file to upload.
+        destination: [str]
+            The destination path in the cloud storage.
+        """
         bucket_name, object_name = destination.split('/', 1)
         bucket = self.client.bucket(bucket_name)
         blob = bucket.blob(object_name)
         blob.upload_from_filename(file_path)
         print(f"File {file_path} uploaded to {destination}.")
 
-    def download_data(self, source, file_path):
+    def download(self, source, file_path):
+        """Download a file from GCS.
+
+        Parameters
+        ----------
+        source: [str]
+            The source path in the cloud storage.
+        file_path: [str]
+            The path to save the downloaded file.
+        """
         bucket_name, object_name = source.split('/', 1)
         bucket = self.client.bucket(bucket_name)
         blob = bucket.blob(object_name)
