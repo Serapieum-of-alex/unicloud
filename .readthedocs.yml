@@ -15,8 +15,8 @@ build:
 
 python:
   install:
-    - method: poetry
-      path: .
+    - method: pip
+      path: docs
     - requirements: docs/requirements.txt
 #       extra_requirements:
 #         - docs
