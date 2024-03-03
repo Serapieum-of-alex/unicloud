@@ -13,14 +13,14 @@ build:
   tools:
     python: "3.11"
 
-python:
-  version: 3.11
-  install:
-    - requirements: docs/requirements.txt
-    - method: pip
-      path: .
-      extra_requirements:
-        - docs
+# python:
+#   version: 3.11
+#   install:
+#     - requirements: docs/requirements.txt
+#     - method: pip
+#       path: .
+#       extra_requirements:
+#         - docs
 
 # Optionally build your docs in additional formats such as PDF and ePub
 formats: all
