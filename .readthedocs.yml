@@ -16,11 +16,6 @@ build:
 python:
   install:
     - requirements: docs/requirements.txt
-#     - method: pip
-#       path: .
-
-#       extra_requirements:
-#         - docs
 
 # Optionally build your docs in additional formats such as PDF and ePub
 formats: all
