@@ -1,5 +1,5 @@
 GCS Class Documentation
-=============================
+=======================
 
 The ``GCS`` class provides methods to interact with Google Cloud Storage (GCS), allowing for uploading and downloading files.
 
@@ -12,7 +12,7 @@ The ``GCS`` class provides methods to interact with Google Cloud Storage (GCS), 
    :param service_key: The path to the service account key file (optional).
    :type service_key: str, optional
 
-   .. method:: upload_data(file_path, destination)
+   .. method:: upload(file_path, destination)
 
       Uploads a file to GCS.
 
@@ -28,7 +28,7 @@ The ``GCS`` class provides methods to interact with Google Cloud Storage (GCS), 
          gcs_client = GCS('my-gcp-project')
          gcs_client.upload_data('/local/path/to/file.txt', 'bucket-name/object-name.txt')
 
-   .. method:: download_data(source, file_path)
+   .. method:: download(source, file_path)
 
       Downloads a file from GCS.
 
@@ -44,7 +44,7 @@ The ``GCS`` class provides methods to interact with Google Cloud Storage (GCS), 
          gcs_client = GCS('my-gcp-project')
          gcs_client.download_data('bucket-name/object-name.txt', '/local/path/to/save/file.txt')
 
-.. automodule:: gcs
+.. automodule:: unicloud.gcs
    :members:
    :undoc-members:
    :show-inheritance:

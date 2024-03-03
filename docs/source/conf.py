@@ -11,8 +11,8 @@ import os
 import sys
 
 # for the auto documentation to work
-sys.path.insert(0, os.path.abspath("../../src/unicloud"))
 
+sys.path.insert(0, os.path.abspath("../../src"))
 
 project = "unicloud"
 copyright = "2024, Mostafa Farrag"

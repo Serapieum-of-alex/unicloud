@@ -14,7 +14,7 @@ The ``AWS`` class provides methods to interact with Amazon Web Services (AWS) S3
    :param region_name: The AWS region to connect to.
    :type region_name: str
 
-   .. method:: upload_data(file_path, bucket_name, object_name)
+   .. method:: upload(file_path, bucket_name, object_name)
 
       Uploads a file to AWS S3.
 
@@ -32,7 +32,7 @@ The ``AWS`` class provides methods to interact with Amazon Web Services (AWS) S3
          aws_client = AWS('your-access-key-id', 'your-secret-access-key', 'us-east-1')
          aws_client.upload_data('/local/path/to/file.txt', 'my-s3-bucket', 'path/in/bucket/file.txt')
 
-   .. method:: download_data(bucket_name, object_name, file_path)
+   .. method:: download(bucket_name, object_name, file_path)
 
       Downloads a file from AWS S3.
 
@@ -51,7 +51,7 @@ The ``AWS`` class provides methods to interact with Amazon Web Services (AWS) S3
          aws_client.download_data('my-s3-bucket', 'path/in/bucket/file.txt', '/local/path/to/save/file.txt')
 
 
-.. automodule:: aws
+.. automodule:: unicloud.aws
    :members:
    :undoc-members:
    :show-inheritance:
