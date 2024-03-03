@@ -5,6 +5,7 @@
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+# import pydata_sphinx_theme
 
 project = "unicloud"
 copyright = "2024, Mostafa Farrag"
@@ -25,5 +26,15 @@ root_doc = "index"
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "alabaster"
+html_theme = "pydata_sphinx_theme"
+
+# Set the theme name
+# Optionally, you can customize the theme's configuration
+html_theme_options = {
+    "navigation_depth": 4,
+    "show_prev_next": False,
+    "show_toc_level": 2,
+    # Add any other theme options here
+}
+
 html_static_path = ["_static"]
