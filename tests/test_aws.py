@@ -20,7 +20,9 @@ class TestS3:
         self.aws_access_key_id = "fake_key"
         self.aws_secret_access_key = "fake_secret"
         self.region_name = "us-east-1"
-        self.client = S3(self.aws_access_key_id, self.aws_secret_access_key, self.region_name)
+        self.client = S3(
+            self.aws_access_key_id, self.aws_secret_access_key, self.region_name
+        )
 
         # Create a mock S3 bucket
         self.bucket_name = MY_TEST_BUCKET
@@ -52,7 +54,9 @@ class TestS3:
         object_name = "test-object.txt"
         bucket_path = f"{bucket_name}/{object_name}"
         # Manually upload a file to mock S3 to download later
-        self.client.client.put_object(Bucket=self.bucket_name, Key=object_name, Body=content)
+        self.client.client.put_object(
+            Bucket=self.bucket_name, Key=object_name, Body=content
+        )
 
         self.client.download(bucket_path, file_path)
 
@@ -67,7 +71,7 @@ def aws_credentials():
     return {
         "aws_access_key_id": "testing",
         "aws_secret_access_key": "testing",
-        "region_name": "us-east-1"
+        "region_name": "us-east-1",
     }
 
 
@@ -75,7 +79,9 @@ def aws_credentials():
 def s3_client(aws_credentials):
     """Create an S3 client for testing."""
     with mock_aws():
-        boto3.client('s3', region_name=aws_credentials["region_name"]).create_bucket(Bucket="my-test-bucket")
+        boto3.client("s3", region_name=aws_credentials["region_name"]).create_bucket(
+            Bucket="my-test-bucket"
+        )
         yield S3(**aws_credentials)
 
 
@@ -91,9 +97,9 @@ class TestS3E2E:
         s3_client.upload(str(file_path), f"{MY_TEST_BUCKET}/test_upload.txt")
 
         # Verify the file exists in S3
-        s3 = boto3.client('s3', region_name="us-east-1")
+        s3 = boto3.client("s3", region_name="us-east-1")
         response = s3.list_objects_v2(Bucket=MY_TEST_BUCKET)
-        assert "test_upload.txt" in [obj['Key'] for obj in response['Contents']]
+        assert "test_upload.txt" in [obj["Key"] for obj in response["Contents"]]
 
     def test_s3_download(self, s3_client, tmp_path):
         """Test file download from S3."""

@@ -5,9 +5,14 @@ import boto3
 
 
 class S3(CloudStorageFactory):
-    """ S3 Cloud Storage"""
+    """S3 Cloud Storage"""
 
-    def __init__(self, aws_access_key_id: str, aws_secret_access_key: str, region_name: Optional[str] = None):
+    def __init__(
+        self,
+        aws_access_key_id: str,
+        aws_secret_access_key: str,
+        region_name: Optional[str] = None,
+    ):
         """
         Initialize the AWS S3 client with credentials and region information.
 
@@ -43,10 +48,10 @@ class S3(CloudStorageFactory):
         """
 
         return boto3.client(
-            's3',
+            "s3",
             region_name=self.region_name,
             aws_access_key_id=self.aws_access_key_id,
-            aws_secret_access_key=self.aws_secret_access_key
+            aws_secret_access_key=self.aws_secret_access_key,
         )
 
     def upload(self, path: str, bucket_path: str):
@@ -59,12 +64,12 @@ class S3(CloudStorageFactory):
         bucket_path: [str]
             The bucket_path in the format "bucket_name/object_name".
         """
-        bucket_name, object_name = bucket_path.split('/', 1)
+        bucket_name, object_name = bucket_path.split("/", 1)
         self.client.upload_file(path, bucket_name, object_name)
         print(f"File {path} uploaded to {bucket_path}.")
 
     def download(self, bucket_path: str, file_path: str):
-        """ Download a file from S3.
+        """Download a file from S3.
 
         Parameters
         ----------
@@ -73,6 +78,6 @@ class S3(CloudStorageFactory):
         file_path: [str]
             The path to save the downloaded file.
         """
-        bucket_name, object_name = bucket_path.split('/', 1)
+        bucket_name, object_name = bucket_path.split("/", 1)
         self.client.download_file(bucket_name, object_name, file_path)
         print(f"File {bucket_path} downloaded to {file_path}.")

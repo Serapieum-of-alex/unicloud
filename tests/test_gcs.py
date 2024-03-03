@@ -8,8 +8,8 @@ from unicloud.gcs import GCS
 MY_TEST_BUCKET = "testing-repositories"
 PROJECT_ID = "earth-engine-415620"
 
-class TestGCS:
 
+class TestGCS:
     @pytest.fixture(autouse=True)
     def mock_gcs_client(self):
         """Mock the create_client method for all tests."""
@@ -111,7 +111,7 @@ class TestGCSE2E:
         cls.gcs = GCS(cls.project_id)
 
         # Create a local file to upload
-        with open(cls.test_file_name, 'w') as f:
+        with open(cls.test_file_name, "w") as f:
             f.write(cls.test_file_content)
 
     @classmethod
@@ -125,14 +125,16 @@ class TestGCSE2E:
     def test_upload_and_download(self):
         """Test uploading and downloading a file to/from GCS."""
         # Upload the file
-        self.gcs.upload(self.test_file_name, f"{self.bucket_name}/{self.test_file_name}")
+        self.gcs.upload(
+            self.test_file_name, f"{self.bucket_name}/{self.test_file_name}"
+        )
 
         # Download the file to a new location
         download_path = f"downloaded-{self.test_file_name}"
         self.gcs.download(f"{self.bucket_name}/{self.test_file_name}", download_path)
 
         # Verify the content of the downloaded file
-        with open(download_path, 'r') as f:
+        with open(download_path, "r") as f:
             downloaded_content = f.read()
 
         assert downloaded_content == self.test_file_content

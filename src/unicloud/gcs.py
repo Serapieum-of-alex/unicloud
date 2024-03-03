@@ -10,7 +10,7 @@ from google.cloud import storage
 
 
 class GCS(CloudStorageFactory):
-    """ GCS Cloud Storage"""
+    """GCS Cloud Storage"""
 
     def __init__(self, project_name: str, service_key: Optional[str] = None):
         """
@@ -26,7 +26,9 @@ class GCS(CloudStorageFactory):
         self._project_id = project_name
         if service_key is not None:
             if not Path(service_key).exists():
-                raise FileNotFoundError(f"The service key file {service_key} does not exist")
+                raise FileNotFoundError(
+                    f"The service key file {service_key} does not exist"
+                )
 
         self.service_key = service_key
         self._client = self.create_client()
@@ -93,7 +95,7 @@ class GCS(CloudStorageFactory):
         destination: [str]
             The destination path in the cloud storage.
         """
-        bucket_name, object_name = destination.split('/', 1)
+        bucket_name, object_name = destination.split("/", 1)
         bucket = self.client.bucket(bucket_name)
         blob = bucket.blob(object_name)
         blob.upload_from_filename(file_path)
@@ -109,7 +111,7 @@ class GCS(CloudStorageFactory):
         file_path: [str]
             The path to save the downloaded file.
         """
-        bucket_name, object_name = source.split('/', 1)
+        bucket_name, object_name = source.split("/", 1)
         bucket = self.client.bucket(bucket_name)
         blob = bucket.blob(object_name)
         blob.download_to_filename(file_path)
