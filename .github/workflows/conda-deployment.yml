@@ -32,12 +32,15 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
-      - name: Install dependencies and package
+      - name: Install Poetry
         run: |
-            conda install -c conda-forge poetry
-            poetry install
-            echo "POETRY_HOME=$HOME/.poetry" >> $GITHUB_ENV
-            echo "$HOME/.poetry/bin" >> $GITHUB_PATH
+            echo "Installing Poetry..."
+            conda run --name test pip install poetry
+
+      - name: Install dependencies with Poetry
+        run: |
+            echo "Installing dependencies..."
+            conda run --name test poetry install
 
       - name: Generate coverage report
         shell: bash -el {0}
@@ -46,4 +49,4 @@ jobs:
           conda list
           conda config --show-sources
           conda config --show
-          poetry run pytest -sv
+          conda run --name test poetry run pytest -sv
