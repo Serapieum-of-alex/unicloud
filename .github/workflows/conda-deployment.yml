@@ -19,7 +19,7 @@ jobs:
           mamba-version: "*"
           #use-mamba: true
           auto-update-conda: false
-          #environment-file: environment.yml
+          environment-file: environment.yml
           auto-activate-base: false
           activate-environment: test
           python-version: ${{ matrix.python-version }}
@@ -32,8 +32,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
-      - name: Install dependencies
+      - name: Install dependencies and package
         run: |
+            conda install -c conda-forge poetry
             poetry install
 
       - name: Generate coverage report
@@ -43,4 +44,4 @@ jobs:
           conda list
           conda config --show-sources
           conda config --show
-          pytest -sv
+          poetry run pytest -sv
