@@ -36,6 +36,8 @@ jobs:
         run: |
             conda install -c conda-forge poetry
             poetry install
+            echo "POETRY_HOME=$HOME/.poetry" >> $GITHUB_ENV
+            echo "$HOME/.poetry/bin" >> $GITHUB_PATH
 
       - name: Generate coverage report
         shell: bash -el {0}
