@@ -22,23 +22,17 @@ Current release info
 
 unicloud - GIS utility package
 =====================================================================
-**unicloud** is a GIS utility package using gdal, ....
+- **Unicloud** provides robust and intuitive tools designed to simplify interactions with AWS S3 and Google
+Cloud Storage (GCS), offering developers a streamlined API for managing cloud storage operations.
+- Whether you're uploading data backups, retrieving files for analysis, or managing cloud storage resources
+programmatically, our package ensures a seamless and efficient experience. Built with flexibility and ease of use
+in mind, it supports a wide range of operations, including file uploads, downloads, and storage management tasks,
+all while maintaining high security and reliability standards.
+- Ideal for developers working in cloud-native
+environments, data scientists requiring reliable data storage solutions, or businesses looking to automate their
+cloud storage workflows, this package aims to enhance productivity and facilitate the seamless integration of
+cloud storage capabilities into Python applications.
 
-unicloud
-
-![1](/docs/images/package-work-flow/overall.png)
-
-Main Features
--------------
-
-- GIS modules to enable the modeler to fully prepare the meteorological inputs and do all the preprocessing
-  needed to build the model (align rasters with the DEM), in addition to various methods to manipulate and
-  convert different forms of distributed data (rasters, NetCDF, shapefiles)
-
-Future work
--------------
-
-- Developing a DEM processing module for generating the river network at different DEM spatial resolutions.
 
 Installing unicloud
 ===============
@@ -68,7 +62,7 @@ pip install git+https://github.com/Serapieum-of-alex/unicloud
 to install the last release, you can easily use pip
 
 ```
-pip install unicloud==0.6.0
+pip install unicloud==0.1.0
 ```
 
 Quick start
@@ -79,7 +73,3 @@ Quick start
 ```
 
 [other code samples](https://unicloud.readthedocs.io/en/latest/?badge=latest)
-
-## Coverage
-
-[![codecov](https://codecov.io/gh/Serapieum-of-alex/unicloud/branch/main/graphs/sunburst.svg?token=g0DV4dCa8N)](https://codecov.io/gh/Serapieum-of-alex/unicloud)
