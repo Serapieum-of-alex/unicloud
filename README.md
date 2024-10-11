@@ -33,9 +33,12 @@ environments, data scientists requiring reliable data storage solutions, or busi
 cloud storage workflows, this package aims to enhance productivity and facilitate the seamless integration of
 cloud storage capabilities into Python applications.
 
+Documentation
+=============
+- Full documentation is available at [Read the Docs](https://unicloud.readthedocs.io/en/latest/?badge=latest)
 
 Installing unicloud
-===============
+===================
 
 Installing `unicloud` from the `conda-forge` channel can be achieved by:
 
