@@ -41,6 +41,7 @@ pre-commit-commit-msg-hooks = "^0.1.0"
 sphinx = "^7.2.6"
 pydata-sphinx-theme = "^0.15.2"
 moto = "^5.0.2"
+flake8-pyproject = "^1.2.3"
 
 #[tool.poetry.extras]
 #docs = ["sphinx", "sphinx_rtd_theme", "sphinx-autodoc-typehints", "recommonmark", "myst-parser"]
@@ -81,6 +82,17 @@ addopts = "-ra -q"
 testpaths = [
     "tests",
 ]
+
+[tool.flake8]
+ignore = ["E203", "E266", "E501", "W503"]
+max-line-length = 88
+per-file-ignores = [
+    '__init__.py:F401',
+]
+count = true
+max-complexity = 18
+#select = B,C,E,F,W,T4
+
 
 markers = [
     "fast: marks tests as fast (deselect with '-m \"not fast\"')",
