@@ -40,7 +40,7 @@ Installing unicloud
 Installing `unicloud` from the `conda-forge` channel can be achieved by:
 
 ```
-conda install -c conda-forge unicloud=0.1.0
+conda install -c conda-forge unicloud=0.2.0
 ```
 
 It is possible to list all the versions of `unicloud` available on your platform with:
@@ -62,7 +62,7 @@ pip install git+https://github.com/Serapieum-of-alex/unicloud
 to install the last release, you can easily use pip
 
 ```
-pip install unicloud==0.1.0
+pip install unicloud==0.2.0
 ```
 
 Quick start
