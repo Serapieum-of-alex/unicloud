@@ -84,11 +84,11 @@ testpaths = [
 ]
 
 [tool.flake8]
-ignore = ["E203", "E266", "E501", "W503"]
-max-line-length = 88
+ignore = ["E501", "E203", "E266", "W503"]
 per-file-ignores = [
     '__init__.py:F401',
 ]
+max-line-length = 88
 count = true
 max-complexity = 18
 #select = B,C,E,F,W,T4
