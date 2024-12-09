@@ -1,9 +1,9 @@
 """This module contains the secret manager for the unicloud package."""
 
-import os.path
-from typing import Union, Any
 import base64
 import json
+import os.path
+from typing import Any, Dict, Union
 
 
 def encode(secret_file: Union[str, Any]) -> bytes:
@@ -26,19 +26,19 @@ def encode(secret_file: Union[str, Any]) -> bytes:
     --------
     To encode a secret file content:
 
-        >>> secret_file = {"type": "service_account", "project_id": "your_project_id"}
-        >>> encode(secret_file, path=False)
+        >>> secret_file_content = {"type": "service_account", "project_id": "your_project_id"}
+        >>> encode(secret_file_content)
         b'eyJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsICJwcm9qZWN0X2lkIjogInlvdXJfcHJvamVjdF9pZCJ9'
 
     To encode a secret file using its path:
 
-        >>> encode("examples/data/secret-file.json", path=True) # doctest: +SKIP
+        >>> encode("examples/data/secret-file.json") # doctest: +SKIP
         b'eyJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsICJwcm9qZWN0X2lkIjogImV4YW1wbGUtcHJvamVjdC1pZCIs******'
 
     To encode a secret file using a json string representing the content:
 
-        >>> secret_file = '{"type": "service_account", "project_id": "your_project_id"}'
-        >>> encode(secret_file) # doctest: +SKIP
+        >>> secret_file_json = '{"type": "service_account", "project_id": "your_project_id"}'
+        >>> encode(secret_file_json) # doctest: +SKIP
         b'eyJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsICJwcm9qZWN0X2lkIjogImV4YW1wbGUtcHJvamVjdF9pZCJ9'
 
     """
@@ -57,7 +57,7 @@ def encode(secret_file: Union[str, Any]) -> bytes:
     return encoded_service_account
 
 
-def decode(string: bytes) -> str:
+def decode(string: bytes) -> Dict[str, str]:
     """decode.
 
         decode the base64 string to the original secret file content
@@ -69,7 +69,7 @@ def decode(string: bytes) -> str:
 
     Returns
     -------
-    str:
+    Dict[str, str]:
         google cloud service account content
 
     Examples
@@ -78,7 +78,7 @@ def decode(string: bytes) -> str:
 
         >>> encoded_content = b'eyJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsICJwcm9qZWN0X2lkIjogImV4YW1wbGUtcHJvamVjdF9pZCJ9'
         >>> decode(encoded_content)
-        {"type": "service_account", "project_id": "your_project_id"}
+        {'type': 'service_account', 'project_id': 'example-project_id'}
     """
     service_key = json.loads(base64.b64decode(string).decode())
     return service_key

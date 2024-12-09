@@ -56,11 +56,10 @@ class GCS(CloudStorageFactory):
         with the content of your service key file encoded using the `unicloud.secret_manager.encode` function.
         """
         self._project_id = project_id
-        if service_key is not None:
-            if not Path(service_key).exists():
-                raise FileNotFoundError(
-                    f"The service key file {service_key} does not exist"
-                )
+        if service_key is not None and not Path(service_key).exists():
+            raise FileNotFoundError(
+                f"The service key file {service_key} does not exist"
+            )
 
         self.service_key = service_key
         self._client = self.create_client()
@@ -119,7 +118,6 @@ class GCS(CloudStorageFactory):
                 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
             )
             client = storage.Client(project=self.project_id, credentials=credentials)
-            # client = storage.Client(project=self.project_name)
         elif "SERVICE_KEY_CONTENT" in os.environ:
             # key need to be decoded into a dict/json object
             service_key_content = decode(os.environ["SERVICE_KEY_CONTENT"])
