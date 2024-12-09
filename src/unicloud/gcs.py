@@ -1,7 +1,5 @@
 """Google Cloud Storage."""
 
-import base64
-import json
 import os
 from pathlib import Path
 from typing import Optional
@@ -10,6 +8,7 @@ from google.cloud import storage
 from google.oauth2 import service_account
 
 from unicloud.abstract_class import CloudStorageFactory
+from unicloud.secret_manager import decode
 
 
 class GCS(CloudStorageFactory):
@@ -22,8 +21,39 @@ class GCS(CloudStorageFactory):
         ----------
         project_id: [str]
             The Google Cloud project name.
-        service_key: [str]
+        service_key: str, optional, default=None
             The path to your service key file.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the service key file is provided and does not exist.
+
+        Examples
+        --------
+        To instantiate the `GCS` class with your `project_id` there are three ways to authenticate:
+        - You can provide a path to your service key file. The file should be a JSON file with the service account
+            credentials. You can provide the path to the file as the `service_key` argument.
+
+            >>> gcs = GCS("my-project-id", service_key="path/to/your/service-account.json") # doctest: +SKIP
+            >>> print(gcs) # doctest: +SKIP
+            <BlankLine>
+                    project_id: my-project-id,
+                    Client Scope=(
+                        'https://www.googleapis.com/auth/devstorage.full_control',
+                        'https://www.googleapis.com/auth/devstorage.read_only',
+                        'https://www.googleapis.com/auth/devstorage.read_write'
+                        )
+                    )
+            <BlankLine>
+
+        - If the GOOGLE_APPLICATION_CREDENTIALS is set in your environment variables, you can instantiate the class
+        without providing the service key path.
+
+            >>> gcs = GCS("earth-engine-415620") # doctest: +SKIP
+
+        - If you are running your code in a cloud environment, you can set the `SERVICE_KEY_CONTENT` environment variable
+        with the content of your service key file encoded using the `unicloud.secret_manager.encode` function.
         """
         self._project_id = project_id
         if service_key is not None:
@@ -72,8 +102,19 @@ class GCS(CloudStorageFactory):
         Returns
         -------
         google cloud storage client object
+
+        Raises
+        ------
+        ValueError
+            If the GOOGLE_APPLICATION_CREDENTIALS and the EE_PRIVATE_KEY and EE_SERVICE_ACCOUNT are not in your env
+            variables you have to provide a path to your service account file.
         """
-        if "GOOGLE_APPLICATION_CREDENTIALS" in os.environ:
+        if self.service_key:
+            credentials = service_account.Credentials.from_service_account_file(
+                self.service_key
+            )
+            client = storage.Client(project=self.project_id, credentials=credentials)
+        elif "GOOGLE_APPLICATION_CREDENTIALS" in os.environ:
             credentials = service_account.Credentials.from_service_account_file(
                 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
             )
@@ -81,18 +122,8 @@ class GCS(CloudStorageFactory):
             # client = storage.Client(project=self.project_name)
         elif "SERVICE_KEY_CONTENT" in os.environ:
             # key need to be decoded into a dict/json object
-            service_key_content = base64.b64decode(
-                eval(f"b'{os.environ['SERVICE_KEY_CONTENT']}'")
-            ).decode()
-
-            service_key_content = json.loads(service_key_content)
-            # connection to the service account
+            service_key_content = decode(os.environ["SERVICE_KEY_CONTENT"])
             client = storage.Client.from_service_account_info(service_key_content)
-        elif self.service_key:
-            credentials = service_account.Credentials.from_service_account_file(
-                self.service_key
-            )
-            client = storage.Client(project=self.project_id, credentials=credentials)
         else:
             raise ValueError(
                 "Since the GOOGLE_APPLICATION_CREDENTIALS and the EE_PRIVATE_KEY and EE_SERVICE_ACCOUNT are not in your"
