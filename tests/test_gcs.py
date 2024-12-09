@@ -1,15 +1,18 @@
 """ Tests for the GCS class. """
+
 import os
 import uuid
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
+
 from unicloud.gcs import GCS
 
 MY_TEST_BUCKET = "testing-repositories"
 PROJECT_ID = "earth-engine-415620"
 
 
-class TestGCS:
+class TestGCSMock:
     @pytest.fixture(autouse=True)
     def mock_gcs_client(self):
         """Mock the create_client method for all tests."""
@@ -34,6 +37,7 @@ class TestGCS:
         project_id = "test-project"
         service_key = "/fake/path/to/service_account.json"
         gcs = GCS(project_id, service_key)
+
         mock_gcs_client.assert_called_once()
         assert gcs.project_id == project_id
         assert gcs.service_key == service_key
@@ -95,6 +99,13 @@ class TestGCS:
         mock_client.bucket.assert_called_with("test-bucket")
         bucket_mock.blob.assert_called_with("test-object")
         mock_download.assert_called_with(file_path)
+
+    def test__str__(self, mock_gcs_client):
+        """Test the __str__ method."""
+        project_id = "test-project"
+        gcs = GCS(project_id)
+        assert isinstance(gcs.__str__(), str)
+        assert isinstance(gcs.__repr__(), str)
 
 
 class TestGCSE2E:
