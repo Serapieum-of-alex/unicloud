@@ -1,29 +1,31 @@
-""" This module is responsible for creating a GCS client """
-from typing import Optional
-from pathlib import Path
-import os
+"""Google Cloud Storage."""
+
 import base64
 import json
-from unicloud.abstract_class import CloudStorageFactory
-from google.oauth2 import service_account
+import os
+from pathlib import Path
+from typing import Optional
+
 from google.cloud import storage
+from google.oauth2 import service_account
+
+from unicloud.abstract_class import CloudStorageFactory
 
 
 class GCS(CloudStorageFactory):
-    """GCS Cloud Storage"""
+    """GCS Cloud Storage."""
 
-    def __init__(self, project_name: str, service_key: Optional[str] = None):
-        """
-        Initializes the GCS client.
+    def __init__(self, project_id: str, service_key: Optional[str] = None):
+        """Initialize the GCS client.
 
         Parameters
         ----------
-        project_name: [str]
+        project_id: [str]
             The Google Cloud project name.
         service_key: [str]
             The path to your service key file.
         """
-        self._project_id = project_name
+        self._project_id = project_id
         if service_key is not None:
             if not Path(service_key).exists():
                 raise FileNotFoundError(
