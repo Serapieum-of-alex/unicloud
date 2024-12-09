@@ -71,6 +71,14 @@ def decode(string: bytes) -> str:
     -------
     str:
         google cloud service account content
+
+    Examples
+    --------
+    To decode a base64 string:
+
+        >>> encoded_content = b'eyJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsICJwcm9qZWN0X2lkIjogImV4YW1wbGUtcHJvamVjdF9pZCJ9'
+        >>> decode(encoded_content)
+        {"type": "service_account", "project_id": "your_project_id"}
     """
     service_key = json.loads(base64.b64decode(string).decode())
     return service_key
