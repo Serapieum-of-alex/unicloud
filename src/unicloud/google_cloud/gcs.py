@@ -8,7 +8,7 @@ from google.cloud import storage
 from google.oauth2 import service_account
 
 from unicloud.abstract_class import CloudStorageFactory
-from unicloud.secret_manager import decode
+from unicloud.google_cloud.secret_manager import decode
 
 
 class GCS(CloudStorageFactory):

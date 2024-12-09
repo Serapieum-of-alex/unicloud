@@ -1,9 +1,10 @@
 """This module contains tests for the S3 class in unicloud/aws.py."""
+
+import boto3
 import pytest
 from moto import mock_aws
-from unicloud.aws import S3
-import boto3
 
+from unicloud.aws.aws import S3
 
 MY_TEST_BUCKET = "test-bucket"
 

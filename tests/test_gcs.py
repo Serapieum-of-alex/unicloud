@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from unicloud.gcs import GCS
+from unicloud.google_cloud.gcs import GCS
 
 MY_TEST_BUCKET = "testing-repositories"
 PROJECT_ID = "earth-engine-415620"
@@ -16,7 +16,7 @@ class TestGCSMock:
     @pytest.fixture(autouse=True)
     def mock_gcs_client(self):
         """Mock the create_client method for all tests."""
-        with patch("unicloud.gcs.GCS.create_client") as mock_create:
+        with patch("unicloud.google_cloud.gcs.GCS.create_client") as mock_create:
             mock_create.return_value = Mock()
             yield mock_create
 
@@ -44,7 +44,7 @@ class TestGCSMock:
 
     @patch("pathlib.Path.exists")
     @patch("google.cloud.storage.blob.Blob.upload_from_filename")
-    @patch("unicloud.gcs.GCS.client")
+    @patch("unicloud.google_cloud.gcs.GCS.client")
     def test_upload(self, mock_client, mock_upload, mock_exists):
         """Test the upload_data method."""
         mock_exists.return_value = True
@@ -73,7 +73,7 @@ class TestGCSMock:
 
     @patch("pathlib.Path.exists")
     @patch("google.cloud.storage.blob.Blob.download_to_filename")
-    @patch("unicloud.gcs.GCS.client")
+    @patch("unicloud.google_cloud.gcs.GCS.client")
     def test_download(self, mock_client, mock_download, mock_exists):
         """Test the download_data method."""
         mock_exists.return_value = True
