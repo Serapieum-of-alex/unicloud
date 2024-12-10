@@ -5,6 +5,7 @@ import uuid
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from google.cloud.storage.bucket import Bucket
 
 from unicloud.google_cloud.gcs import GCS
 
@@ -138,6 +139,16 @@ class TestGCSMock:
         assert gcs.bucket_list == ["bucket-1", "bucket-2", "bucket-3"]
         gcs_client.list_buckets.assert_called_once()
 
+    @patch("google.cloud.storage.Bucket")
+    def test_get_bucket(self, mock_bucket):
+        """Test the get_bucket method."""
+        mock_bucket.return_value = MagicMock()
+        project_id = "test-project"
+        gcs = GCS(project_id)
+
+        gcs.get_bucket("test-bucket")
+        mock_bucket.assert_called_once()
+
 
 class TestGCSE2E:
     project_id = PROJECT_ID
@@ -183,3 +194,7 @@ class TestGCSE2E:
 
         # Clean up the downloaded file
         os.remove(download_path)
+
+    def test_get_bucket(self):
+        bucket = self.gcs.get_bucket(self.bucket_name)
+        assert isinstance(bucket, Bucket)

@@ -174,3 +174,25 @@ class GCS(CloudStorageFactory):
         blob = bucket.blob(object_name)
         blob.download_to_filename(file_path)
         print(f"File {source} downloaded to {file_path}.")
+
+    def get_bucket(self, bucket_id: str) -> storage.bucket.Bucket:
+        """get_bucket.
+
+            get_bucket returns the bucket object
+
+        Parameters
+        ----------
+        bucket_id : [str]
+            bucket id
+
+        Returns
+        -------
+        storage.bucket.Bucket
+
+        Examples
+        --------
+        >>> my_bucket_id = "datasets"
+        >>> gcs = GCS("py-project-id")  # doctest: +SKIP
+        >>> bucket_usr = gcs.get_bucket(my_bucket_id)   # doctest: +SKIP
+        """
+        return storage.Bucket(self.client, bucket_id, user_project=self.project_id)
