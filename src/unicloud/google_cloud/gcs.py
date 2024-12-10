@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 from google.cloud import storage
 from google.oauth2 import service_account
@@ -87,6 +87,19 @@ class GCS(CloudStorageFactory):
         project_id: {self.project_id},
         Client Scope={self.client.SCOPE})
         """
+
+    @property
+    def bucket_list(self) -> List[str]:
+        """bucket_list.
+
+            list the buckets
+
+        Returns
+        -------
+        List[str]
+            list of bucket names
+        """
+        return [bucket.name for bucket in self.client.list_buckets()]
 
     def create_client(self) -> storage.client.Client:
         """create_client.

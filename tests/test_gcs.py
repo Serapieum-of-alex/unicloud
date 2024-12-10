@@ -2,7 +2,7 @@
 
 import os
 import uuid
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -106,6 +106,37 @@ class TestGCSMock:
         gcs = GCS(project_id)
         assert isinstance(gcs.__str__(), str)
         assert isinstance(gcs.__repr__(), str)
+
+    @patch("unicloud.google_cloud.gcs.GCS.client")
+    def test_bucket_list(self, gcs_client):
+        """
+        The test mocks the GCS.client local property as gcs_client (the GCS.client covers the origial storage.client.Client
+        object from google.cloud.storage.client.Client)
+        Inside the test the list_buckets method from the original Client (self.client.list_buckets()) is mocked to
+        return a list of mocked buckets
+        `return [bucket.name for bucket in self.client.list_buckets()]`
+        `return [bucket.name for bucket in [mock_bucket1, mock_bucket2, mock_bucket3]]`
+        """
+        # Create a mock bucket
+        mock_bucket1 = MagicMock()
+        mock_bucket1.name = "bucket-1"
+        mock_bucket2 = MagicMock()
+        mock_bucket2.name = "bucket-2"
+        mock_bucket3 = MagicMock()
+        mock_bucket3.name = "bucket-3"
+
+        # Mock the list_buckets method
+        gcs_client.list_buckets.return_value = [
+            mock_bucket1,
+            mock_bucket2,
+            mock_bucket3,
+        ]
+
+        gcs = GCS("test-project")
+        gcs_client._client = gcs_client
+
+        assert gcs.bucket_list == ["bucket-1", "bucket-2", "bucket-3"]
+        gcs_client.list_buckets.assert_called_once()
 
 
 class TestGCSE2E:
