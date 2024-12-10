@@ -65,23 +65,23 @@ class GCS(CloudStorageFactory):
         self._client = self.create_client()
 
     @property
-    def project_id(self):
+    def project_id(self) -> str:
         """project_id."""
         return self._project_id
 
     @property
-    def client(self):
+    def client(self) -> storage.client.Client:
         """client."""
         return self._client
 
-    def __str__(self):
+    def __str__(self) -> str:
         """__str__."""
         return f"""
         project_id: {self.project_id},
         Client Scope={self.client.SCOPE})
         """
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """__repr__."""
         return f"""
         project_id: {self.project_id},
