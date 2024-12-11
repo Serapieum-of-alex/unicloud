@@ -5,12 +5,21 @@ import uuid
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from google.cloud import storage
 from google.cloud.storage.bucket import Bucket
 
-from unicloud.google_cloud.gcs import GCS
+from unicloud.google_cloud.gcs import GCS, GCSBucket
 
 MY_TEST_BUCKET = "testing-repositories"
 PROJECT_ID = "earth-engine-415620"
+
+
+def create_file() -> str:
+    test_file_name = f"test-file-{uuid.uuid4()}.txt"
+    test_file_content = "This is a test file."
+    with open(test_file_name, "w") as f:
+        f.write(test_file_content)
+    return test_file_name
 
 
 class TestGCSMock:
@@ -197,4 +206,49 @@ class TestGCSE2E:
 
     def test_get_bucket(self):
         bucket = self.gcs.get_bucket(self.bucket_name)
-        assert isinstance(bucket, Bucket)
+        assert isinstance(bucket, GCSBucket)
+
+
+class TestGCSBucketE2E:
+
+    @classmethod
+    def setup_class(cls):
+        """Set up resources before running tests."""
+        # Assuming your GCS class initialization looks something like this:
+        client = GCS(PROJECT_ID).client
+        bucket = storage.Bucket(client, MY_TEST_BUCKET, user_project=PROJECT_ID)
+        cls.bucket = GCSBucket(bucket)
+
+    def test_list_blobs(self):
+        blobs = self.bucket.list_blobs()
+        assert isinstance(blobs, list)
+        assert all([isinstance(blob, str) for blob in blobs])
+
+    def test_get_blob(self):
+        blobs = self.bucket.list_blobs()
+        blob = self.bucket.get_blob(blobs[0])
+        assert isinstance(blob, storage.blob.Blob)
+
+    def test_upload_blob(self):
+        # Create a local file to upload
+        test_file_name = f"test-file-{uuid.uuid4()}.txt"
+        test_file_content = "This is a test file."
+        with open(test_file_name, "w") as f:
+            f.write(test_file_content)
+
+        self.bucket.upload_blob(
+            test_file_name, f"test-upload-gcs-bucket/{test_file_name}"
+        )
+
+    def test_download_blob(self):
+        blobs = self.bucket.list_blobs()
+        blob = self.bucket.get_blob(blobs[0])
+        download_path = f"tests/data/delete-downloaded-{blob.name}"
+        self.bucket.download_blob(blob.name, download_path)
+        os.remove(download_path)
+
+    def test_delete_blob(self):
+        file_name = create_file()
+        self.bucket.upload_blob(file_name, file_name)
+        self.bucket.delete_blob(file_name)
+        assert file_name not in self.bucket.list_blobs()

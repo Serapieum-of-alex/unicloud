@@ -193,7 +193,7 @@ class GCS(CloudStorageFactory):
         blob.download_to_filename(local_path)
         print(f"File {cloud_path} downloaded to {local_path}.")
 
-    def get_bucket(self, bucket_id: str) -> storage.bucket.Bucket:
+    def get_bucket(self, bucket_id: str) -> "GCSBucket":
         """get_bucket.
 
             get_bucket returns the bucket object
@@ -213,4 +213,102 @@ class GCS(CloudStorageFactory):
         >>> gcs = GCS("py-project-id")  # doctest: +SKIP
         >>> bucket_usr = gcs.get_bucket(my_bucket_id)   # doctest: +SKIP
         """
-        return storage.Bucket(self.client, bucket_id, user_project=self.project_id)
+        bucket = storage.Bucket(self.client, bucket_id, user_project=self.project_id)
+        return GCSBucket(bucket)
+
+
+class GCSBucket:
+    """GCSBucket."""
+
+    def __init__(self, bucket: storage.bucket.Bucket):
+        """Initialize the GCSBucket."""
+        self._bucket = bucket
+
+    def __str__(self):
+        """__str__."""
+        return f"Bucket: {self.bucket.name}"
+
+    def __repr__(self):
+        """__repr__."""
+        return f"Bucket: {self.bucket.name}"
+
+    @property
+    def bucket(self) -> storage.bucket.Bucket:
+        """bucket."""
+        return self._bucket
+
+    def list_blobs(self) -> List[str]:
+        """list_blobs."""
+        return [blob.name for blob in self.bucket.list_blobs()]
+
+    def get_blob(self, blob_id) -> storage.blob.Blob:
+        """get_blob."""
+        return self.bucket.get_blob(blob_id)
+
+    def upload_blob(self, local_path, bucket_path):
+        """Upload a file to GCS.
+
+        Parameters
+        ----------
+        local_path: [str]
+            The path to the file to upload.
+        bucket_path: [str]
+            The path in the bucket, this path has to have the bucket id as the first path of the path.
+
+        Examples
+        --------
+        >>> Bucket_ID = "test-bucket"
+        >>> PROJECT_ID = "py-project-id"
+        >>> gcs = GCS(PROJECT_ID)   # doctest: +SKIP
+        >>> my_bucket = gcs.get_bucket(Bucket_ID)   # doctest: +SKIP
+        >>> local_path = "path/to/local/my-file.txt"
+        >>> bucket_path = "my-file.txt"
+        >>> my_bucket.upload_blob(file_path, bucket_path) # doctest: +SKIP
+        """
+        blob = self.bucket.blob(bucket_path)
+        blob.upload_from_filename(local_path)
+        print(f"File {local_path} uploaded to {bucket_path}.")
+
+    def download_blob(self, file_name, local_path):
+        """Download a file from GCS.
+
+        Parameters
+        ----------
+        file_name: str
+            The name of the file to download.
+        local_path: str
+            The path to save the downloaded file.
+
+        Examples
+        --------
+        >>> Bucket_ID = "test-bucket"
+        >>> PROJECT_ID = "py-project-id"
+        >>> gcs = GCS(PROJECT_ID)  # doctest: +SKIP
+        >>> my_bucket = gcs.get_bucket(Bucket_ID)   # doctest: +SKIP
+        >>> file_name = "my-file.txt"
+        >>> local_path = "path/to/local/my-file.txt"
+        >>> my_bucket.download_blob(file_name, local_path)  # doctest: +SKIP
+        """
+        blob = self.bucket.blob(file_name)
+        blob.download_to_filename(local_path)
+        print(f"File {file_name} downloaded to {local_path}.")
+
+    def delete_blob(self, blob_id: str):
+        """delete_blob.
+
+        Parameters
+        ----------
+        blob_id : [str]
+            blob id
+
+        Examples
+        --------
+        >>> Bucket_ID = "test-bucket"
+        >>> PROJECT_ID = "py-project-id"
+        >>> gcs = GCS(PROJECT_ID) # doctest: +SKIP
+        >>> my_bucket = gcs.get_bucket(Bucket_ID) # doctest: +SKIP
+        >>> my_bucket.delete_blob("my-file.txt") # doctest: +SKIP
+        """
+        blob = self.bucket.blob(blob_id)
+        blob.delete()
+        print(f"Blob {blob_id} deleted.")
