@@ -143,37 +143,55 @@ class GCS(CloudStorageFactory):
 
         return client
 
-    def upload(self, file_path: str, destination: str):
+    def upload(self, local_path: str, bucket_path: str):
         """Upload a file to GCS.
 
         Parameters
         ----------
-        file_path: [str]
+        local_path: [str]
             The path to the file to upload.
-        destination: [str]
-            The destination path in the cloud storage.
+        bucket_path: [str]
+            The path in the bucket, this path has to have the bucket id as the first path of the path.
+
+        Examples
+        --------
+        >>> Bucket_ID = "test-bucket"
+        >>> PROJECT_ID = "py-project-id"
+        >>> gcs = GCS(PROJECT_ID)  # doctest: +SKIP
+        >>> file_path = "path/to/local/my-file.txt"  # doctest: +SKIP
+        >>> bucket_path = f"{Bucket_ID}/my-file.txt"  # doctest: +SKIP
+        >>> gcs.upload(file_path, bucket_path) # doctest: +SKIP
         """
-        bucket_name, object_name = destination.split("/", 1)
+        bucket_name, object_name = bucket_path.split("/", 1)
         bucket = self.client.bucket(bucket_name)
         blob = bucket.blob(object_name)
-        blob.upload_from_filename(file_path)
-        print(f"File {file_path} uploaded to {destination}.")
+        blob.upload_from_filename(local_path)
+        print(f"File {local_path} uploaded to {bucket_path}.")
 
-    def download(self, source, file_path):
+    def download(self, cloud_path, local_path):
         """Download a file from GCS.
 
         Parameters
         ----------
-        source: [str]
+        cloud_path: [str]
             The source path in the cloud storage.
-        file_path: [str]
+        local_path: [str]
             The path to save the downloaded file.
+
+        Examples
+        --------
+        >>> Bucket_ID = "test-bucket"
+        >>> PROJECT_ID = "py-project-id"
+        >>> gcs = GCS(PROJECT_ID) # doctest: +SKIP
+        >>> cloud_path = f"{Bucket_ID}/my-file.txt"
+        >>> local_path = "path/to/local/my-file.txt"
+        >>> gcs.download(cloud_path, local_path) # doctest: +SKIP
         """
-        bucket_name, object_name = source.split("/", 1)
+        bucket_name, object_name = cloud_path.split("/", 1)
         bucket = self.client.bucket(bucket_name)
         blob = bucket.blob(object_name)
-        blob.download_to_filename(file_path)
-        print(f"File {source} downloaded to {file_path}.")
+        blob.download_to_filename(local_path)
+        print(f"File {cloud_path} downloaded to {local_path}.")
 
     def get_bucket(self, bucket_id: str) -> storage.bucket.Bucket:
         """get_bucket.
