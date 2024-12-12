@@ -245,8 +245,8 @@ class TestGCSBucketE2E:
         blob = self.bucket.get_blob(blobs[0])
         download_path = f"tests/data/delete-downloaded-{blob.name}"
         self.bucket.download_blob(blob.name, download_path)
-        if os.path.exists(download_path):
-            os.remove(download_path)
+        assert os.path.exists(download_path)
+        os.remove(download_path)
 
     def test_delete_blob(self):
         file_name = create_file()
