@@ -32,14 +32,18 @@ jobs:
         run: |
             poetry --version
             poetry install
+
       - name: Set up Google Cloud credentials
         env:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
         run: |
           echo "$GCP_SA_KEY" > gcp-key.json
           echo "GOOGLE_APPLICATION_CREDENTIALS=${{ github.workspace }}/gcp-key.json" >> $GITHUB_ENV
+          # verify the credentials
+          gcloud auth activate-service-account --key-file=gcp-key.json
+          gcloud auth list
 
-      - name: Generate coverage report
+      - name: Run Tests
         run: |
           poetry run pytest -sv --cov=src/unicloud --cov-report=xml
 
