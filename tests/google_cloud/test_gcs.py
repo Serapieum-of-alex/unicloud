@@ -245,7 +245,7 @@ class TestGCSBucketE2E:
             test_file_name, f"test-upload-gcs-bucket/{test_file_name}"
         )
 
-    def test_download_file(self):
+    def test_download_single_file(self):
         blobs = self.bucket.list_files()
         blob = self.bucket.get_file(blobs[0])
         download_path = f"tests/delete-downloaded-{blob.name}"
@@ -258,6 +258,8 @@ class TestGCSBucketE2E:
         self.bucket.upload_file(file_name, file_name)
         self.bucket.delete_file(file_name)
         assert file_name not in self.bucket.list_files()
+
+
 
 
 def test_search():
