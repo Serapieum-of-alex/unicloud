@@ -228,6 +228,12 @@ class TestGCSBucketE2E:
         blob = self.bucket.get_file(blobs[0])
         assert isinstance(blob, storage.blob.Blob)
 
+    def test_file_exists(self):
+        # check file that exists
+        assert self.bucket.file_exists("211102_rabo_all_aois.geojson")
+        # check file that does not exist
+        assert not self.bucket.file_exists("non_existent_file.geojson")
+
     def test_upload_blob(self):
         # Create a local file to upload
         test_file_name = f"test-file-{uuid.uuid4()}.txt"

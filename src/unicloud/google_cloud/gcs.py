@@ -245,6 +245,31 @@ class GCSBucket:
         """get_blob."""
         return self.bucket.get_blob(blob_id)
 
+    def file_exists(self, file_name: str) -> bool:
+        """file_exists.
+
+        Parameters
+        ----------
+        file_name : [str]
+            file name
+
+        Returns
+        -------
+        bool
+            True if the file exists, False otherwise
+
+        Examples
+        --------
+        >>> Bucket_ID = "test-bucket"
+        >>> PROJECT_ID = "py-project-id"
+        >>> gcs = GCS(PROJECT_ID)
+        >>> my_bucket = gcs.get_bucket(Bucket_ID)
+        >>> print(my_bucket.file_exists("my-file.txt")) # doctest: +SKIP
+        False
+        """
+        blob = self.bucket.get_blob(file_name)
+        return False if blob is None else True
+
     def upload_file(self, local_path, bucket_path):
         """Upload a file to GCS.
 
