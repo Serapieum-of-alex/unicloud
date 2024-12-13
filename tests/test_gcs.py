@@ -258,3 +258,32 @@ class TestGCSBucketE2E:
         self.bucket.upload_file(file_name, file_name)
         self.bucket.delete_file(file_name)
         assert file_name not in self.bucket.list_files()
+
+
+def test_search():
+    # Mock bucket and blobs
+    mock_bucket = MagicMock()
+    # Create mock blobs with specific names
+    mock_blob1 = MagicMock()
+    mock_blob1.name = "file1.txt"
+    mock_blob2 = MagicMock()
+    mock_blob2.name = "data/file2.txt"
+    mock_blob3 = MagicMock()
+    mock_blob3.name = "data/file3.log"
+    mock_blob4 = MagicMock()
+    mock_blob4.name = "logs/log1.txt"
+    mock_bucket.list_blobs.return_value = [
+        mock_blob1,
+        mock_blob2,
+        mock_blob3,
+        mock_blob4,
+    ]
+
+    gcs_bucket = GCSBucket(mock_bucket)
+
+    matching_files = gcs_bucket.search("*.txt")
+    assert matching_files == ["file1.txt", "data/file2.txt", "logs/log1.txt"]
+
+    # Test glob_files within a directory
+    matching_files = gcs_bucket.search("*.txt", directory="data")
+    assert matching_files == ["data/file2.txt"]

@@ -1,5 +1,6 @@
 """Google Cloud Storage."""
 
+import fnmatch
 import os
 from pathlib import Path
 from typing import List, Optional
@@ -337,3 +338,51 @@ class GCSBucket:
         blob = self.bucket.blob(blob_id)
         blob.delete()
         print(f"Blob {blob_id} deleted.")
+
+    def search(self, pattern: str = "*", directory: Optional[str] = None) -> List[str]:
+        """Find files in the bucket matching a pattern, optionally within a specific directory.
+
+        Parameters
+        ----------
+        pattern : str
+            The pattern to match files against (e.g., '*.txt', 'data/*.json').
+        directory : Optional[str]
+            The directory in the bucket to search within (e.g., 'data/', 'logs/').
+            If None, the entire bucket is searched.
+
+        Returns
+        -------
+        List[str]
+            List of file names in the bucket that match the pattern.
+
+        Examples
+        --------
+        - Initialize the GCS object
+
+            >>> bucket = "my-bucket"
+            >>> PROJECT_ID = "my-project-id"
+            >>> gcs = GCS(PROJECT_ID) # doctest: +SKIP
+            >>> my_bucket = gcs.get_bucket(bucket) # doctest: +SKIP
+
+        - Glob across the entire bucket
+
+            >>> matching_files = my_bucket.search("*.txt") # doctest: +SKIP
+
+        - Glob within a specific directory
+
+            >>> matching_files = my_bucket.search("*.txt", directory="data/")   # doctest: +SKIP
+        """
+        # Ensure the directory ends with a slash if specified
+        if directory and not directory.endswith("/"):
+            directory += "/"
+
+        # Use prefix to narrow down results if a directory is specified
+        prefix = directory if directory else ""
+        blobs = self.bucket.list_blobs(prefix=prefix)
+
+        # Filter blobs by the pattern
+        return [
+            blob.name
+            for blob in blobs
+            if fnmatch.fnmatch(blob.name, f"{prefix}{pattern}")
+        ]
