@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from google.cloud import storage
-from google.cloud.storage.bucket import Bucket
 
 from unicloud.google_cloud.gcs import GCS, GCSBucket
 
