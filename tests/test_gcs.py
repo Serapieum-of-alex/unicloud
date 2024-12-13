@@ -218,12 +218,12 @@ class TestGCSBucketE2E:
         bucket = storage.Bucket(client, MY_TEST_BUCKET, user_project=PROJECT_ID)
         cls.bucket = GCSBucket(bucket)
 
-    def test_list_blobs(self):
+    def test_list_files(self):
         blobs = self.bucket.list_files()
         assert isinstance(blobs, list)
         assert all([isinstance(blob, str) for blob in blobs])
 
-    def test_get_blob(self):
+    def test_get_file(self):
         blobs = self.bucket.list_files()
         blob = self.bucket.get_file(blobs[0])
         assert isinstance(blob, storage.blob.Blob)
@@ -234,7 +234,7 @@ class TestGCSBucketE2E:
         # check file that does not exist
         assert not self.bucket.file_exists("non_existent_file.geojson")
 
-    def test_upload_blob(self):
+    def test_upload_file(self):
         # Create a local file to upload
         test_file_name = f"test-file-{uuid.uuid4()}.txt"
         test_file_content = "This is a test file."
@@ -245,7 +245,7 @@ class TestGCSBucketE2E:
             test_file_name, f"test-upload-gcs-bucket/{test_file_name}"
         )
 
-    def test_download_blob(self):
+    def test_download_file(self):
         blobs = self.bucket.list_files()
         blob = self.bucket.get_file(blobs[0])
         download_path = f"tests/delete-downloaded-{blob.name}"
@@ -253,7 +253,7 @@ class TestGCSBucketE2E:
         assert os.path.exists(download_path)
         os.remove(download_path)
 
-    def test_delete_blob(self):
+    def test_delete_file(self):
         file_name = create_file()
         self.bucket.upload_file(file_name, file_name)
         self.bucket.delete_file(file_name)
