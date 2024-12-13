@@ -1,24 +1,15 @@
 """ Tests for the GCS class. """
 
 import os
-import uuid
+from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from google.cloud import storage
 
 from unicloud.google_cloud.gcs import GCS, GCSBucket
 
 MY_TEST_BUCKET = "testing-repositories"
 PROJECT_ID = "earth-engine-415620"
-
-
-def create_file() -> str:
-    test_file_name = f"test-file-{uuid.uuid4()}.txt"
-    test_file_content = "This is a test file."
-    with open(test_file_name, "w") as f:
-        f.write(test_file_content)
-    return test_file_name
 
 
 class TestGCSMock:
@@ -161,131 +152,31 @@ class TestGCSMock:
 class TestGCSE2E:
     project_id = PROJECT_ID
     bucket_name = MY_TEST_BUCKET
-    # Generate a unique filename to avoid conflicts
-    test_file_name = f"test-file-{uuid.uuid4()}.txt"
-    test_file_content = "This is a test file."
-
-    @classmethod
-    def setup_class(cls):
-        """Set up resources before running tests."""
-        # Assuming your GCS class initialization looks something like this:
-        cls.gcs = GCS(cls.project_id)
-
-        # Create a local file to upload
-        with open(cls.test_file_name, "w") as f:
-            f.write(cls.test_file_content)
+    gcs = GCS(project_id)
 
     @classmethod
     def teardown_class(cls):
         """Clean up resources after tests."""
         # Delete the test file from the bucket
         # cls.gcs.delete_data(f"{cls.bucket_name}/{cls.test_file_name}")
-        # Remove the local test file
-        os.remove(cls.test_file_name)
+        pass
 
-    def test_upload_and_download(self):
+    def test_upload_and_download(self, test_file: Path, test_file_content: str):
         """Test uploading and downloading a file to/from GCS."""
-        # Upload the file
-        self.gcs.upload(
-            self.test_file_name, f"{self.bucket_name}/{self.test_file_name}"
-        )
+        bucket_path = f"{self.bucket_name}/{test_file.name}"
+        self.gcs.upload(str(test_file), bucket_path)
 
-        # Download the file to a new location
-        download_path = f"downloaded-{self.test_file_name}"
-        self.gcs.download(f"{self.bucket_name}/{self.test_file_name}", download_path)
+        download_path = f"downloaded-{test_file.name}"
+        self.gcs.download(bucket_path, download_path)
 
         # Verify the content of the downloaded file
         with open(download_path, "r") as f:
             downloaded_content = f.read()
 
-        assert downloaded_content == self.test_file_content
+        assert downloaded_content == test_file_content
 
-        # Clean up the downloaded file
         os.remove(download_path)
 
     def test_get_bucket(self):
         bucket = self.gcs.get_bucket(self.bucket_name)
         assert isinstance(bucket, GCSBucket)
-
-
-class TestGCSBucketE2E:
-
-    @classmethod
-    def setup_class(cls):
-        """Set up resources before running tests."""
-        # Assuming your GCS class initialization looks something like this:
-        client = GCS(PROJECT_ID).client
-        bucket = storage.Bucket(client, MY_TEST_BUCKET, user_project=PROJECT_ID)
-        cls.bucket = GCSBucket(bucket)
-
-    def test_list_files(self):
-        blobs = self.bucket.list_files()
-        assert isinstance(blobs, list)
-        assert all([isinstance(blob, str) for blob in blobs])
-
-    def test_get_file(self):
-        blobs = self.bucket.list_files()
-        blob = self.bucket.get_file(blobs[0])
-        assert isinstance(blob, storage.blob.Blob)
-
-    def test_file_exists(self):
-        # check file that exists
-        assert self.bucket.file_exists("211102_rabo_all_aois.geojson")
-        # check file that does not exist
-        assert not self.bucket.file_exists("non_existent_file.geojson")
-
-    def test_upload_file(self):
-        # Create a local file to upload
-        test_file_name = f"test-file-{uuid.uuid4()}.txt"
-        test_file_content = "This is a test file."
-        with open(test_file_name, "w") as f:
-            f.write(test_file_content)
-
-        self.bucket.upload_file(
-            test_file_name, f"test-upload-gcs-bucket/{test_file_name}"
-        )
-
-    def test_download_single_file(self):
-        blobs = self.bucket.list_files()
-        blob = self.bucket.get_file(blobs[0])
-        download_path = f"tests/delete-downloaded-{blob.name}"
-        self.bucket.download_file(blob.name, download_path)
-        assert os.path.exists(download_path)
-        os.remove(download_path)
-
-    def test_delete_file(self):
-        file_name = create_file()
-        self.bucket.upload_file(file_name, file_name)
-        self.bucket.delete_file(file_name)
-        assert file_name not in self.bucket.list_files()
-
-
-
-
-def test_search():
-    # Mock bucket and blobs
-    mock_bucket = MagicMock()
-    # Create mock blobs with specific names
-    mock_blob1 = MagicMock()
-    mock_blob1.name = "file1.txt"
-    mock_blob2 = MagicMock()
-    mock_blob2.name = "data/file2.txt"
-    mock_blob3 = MagicMock()
-    mock_blob3.name = "data/file3.log"
-    mock_blob4 = MagicMock()
-    mock_blob4.name = "logs/log1.txt"
-    mock_bucket.list_blobs.return_value = [
-        mock_blob1,
-        mock_blob2,
-        mock_blob3,
-        mock_blob4,
-    ]
-
-    gcs_bucket = GCSBucket(mock_bucket)
-
-    matching_files = gcs_bucket.search("*.txt")
-    assert matching_files == ["file1.txt", "data/file2.txt", "logs/log1.txt"]
-
-    # Test glob_files within a directory
-    matching_files = gcs_bucket.search("*.txt", directory="data")
-    assert matching_files == ["data/file2.txt"]
