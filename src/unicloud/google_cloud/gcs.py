@@ -315,9 +315,26 @@ class GCSBucket:
         >>> local_path = "path/to/local/my-file.txt"
         >>> my_bucket.download_file(file_name, local_path)  # doctest: +SKIP
         """
-        blob = self.bucket.blob(file_name)
-        blob.download_to_filename(local_path)
-        print(f"File {file_name} downloaded to {local_path}.")
+        if file_name.endswith("/"):
+            blobs = self.bucket.list_blobs(
+                prefix=file_name
+            )  # List all files in the directory
+            for blob in blobs:
+                if blob.name.endswith("/"):
+                    continue
+
+                # Remove the directory prefix to get the relative path
+                relative_path = Path(blob.name).relative_to(file_name)
+                local_file_path = local_path / relative_path
+                # Ensure the directory structure exists
+                local_file_path.parent.mkdir(parents=True, exist_ok=True)
+                blob.download_to_filename(local_file_path)
+                print(f"Downloaded {blob.name} to {local_file_path}.")
+        else:
+            # Single file download
+            blob = self.bucket.blob(file_name)
+            blob.download_to_filename(local_path)
+            print(f"File {file_name} downloaded to {local_path}.")
 
     def delete_file(self, blob_id: str):
         """delete_blob.
