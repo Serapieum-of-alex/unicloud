@@ -237,15 +237,15 @@ class GCSBucket:
         """bucket."""
         return self._bucket
 
-    def list_blobs(self) -> List[str]:
+    def list_files(self) -> List[str]:
         """list_blobs."""
         return [blob.name for blob in self.bucket.list_blobs()]
 
-    def get_blob(self, blob_id) -> storage.blob.Blob:
+    def get_file(self, blob_id) -> storage.blob.Blob:
         """get_blob."""
         return self.bucket.get_blob(blob_id)
 
-    def upload_blob(self, local_path, bucket_path):
+    def upload_file(self, local_path, bucket_path):
         """Upload a file to GCS.
 
         Parameters
@@ -263,13 +263,13 @@ class GCSBucket:
         >>> my_bucket = gcs.get_bucket(Bucket_ID)   # doctest: +SKIP
         >>> local_path = "path/to/local/my-file.txt"
         >>> bucket_path = "my-file.txt"
-        >>> my_bucket.upload_blob(file_path, bucket_path) # doctest: +SKIP
+        >>> my_bucket.upload_file(file_path, bucket_path) # doctest: +SKIP
         """
         blob = self.bucket.blob(bucket_path)
         blob.upload_from_filename(local_path)
         print(f"File {local_path} uploaded to {bucket_path}.")
 
-    def download_blob(self, file_name, local_path):
+    def download_file(self, file_name, local_path):
         """Download a file from GCS.
 
         Parameters
@@ -287,13 +287,13 @@ class GCSBucket:
         >>> my_bucket = gcs.get_bucket(Bucket_ID)   # doctest: +SKIP
         >>> file_name = "my-file.txt"
         >>> local_path = "path/to/local/my-file.txt"
-        >>> my_bucket.download_blob(file_name, local_path)  # doctest: +SKIP
+        >>> my_bucket.download_file(file_name, local_path)  # doctest: +SKIP
         """
         blob = self.bucket.blob(file_name)
         blob.download_to_filename(local_path)
         print(f"File {file_name} downloaded to {local_path}.")
 
-    def delete_blob(self, blob_id: str):
+    def delete_file(self, blob_id: str):
         """delete_blob.
 
         Parameters
@@ -307,7 +307,7 @@ class GCSBucket:
         >>> PROJECT_ID = "py-project-id"
         >>> gcs = GCS(PROJECT_ID) # doctest: +SKIP
         >>> my_bucket = gcs.get_bucket(Bucket_ID) # doctest: +SKIP
-        >>> my_bucket.delete_blob("my-file.txt") # doctest: +SKIP
+        >>> my_bucket.delete_file("my-file.txt") # doctest: +SKIP
         """
         blob = self.bucket.blob(blob_id)
         blob.delete()

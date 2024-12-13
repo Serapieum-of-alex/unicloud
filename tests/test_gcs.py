@@ -219,13 +219,13 @@ class TestGCSBucketE2E:
         cls.bucket = GCSBucket(bucket)
 
     def test_list_blobs(self):
-        blobs = self.bucket.list_blobs()
+        blobs = self.bucket.list_files()
         assert isinstance(blobs, list)
         assert all([isinstance(blob, str) for blob in blobs])
 
     def test_get_blob(self):
-        blobs = self.bucket.list_blobs()
-        blob = self.bucket.get_blob(blobs[0])
+        blobs = self.bucket.list_files()
+        blob = self.bucket.get_file(blobs[0])
         assert isinstance(blob, storage.blob.Blob)
 
     def test_upload_blob(self):
@@ -235,20 +235,20 @@ class TestGCSBucketE2E:
         with open(test_file_name, "w") as f:
             f.write(test_file_content)
 
-        self.bucket.upload_blob(
+        self.bucket.upload_file(
             test_file_name, f"test-upload-gcs-bucket/{test_file_name}"
         )
 
     def test_download_blob(self):
-        blobs = self.bucket.list_blobs()
-        blob = self.bucket.get_blob(blobs[0])
+        blobs = self.bucket.list_files()
+        blob = self.bucket.get_file(blobs[0])
         download_path = f"tests/delete-downloaded-{blob.name}"
-        self.bucket.download_blob(blob.name, download_path)
+        self.bucket.download_file(blob.name, download_path)
         assert os.path.exists(download_path)
         os.remove(download_path)
 
     def test_delete_blob(self):
         file_name = create_file()
-        self.bucket.upload_blob(file_name, file_name)
-        self.bucket.delete_blob(file_name)
-        assert file_name not in self.bucket.list_blobs()
+        self.bucket.upload_file(file_name, file_name)
+        self.bucket.delete_file(file_name)
+        assert file_name not in self.bucket.list_files()
