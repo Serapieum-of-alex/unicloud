@@ -54,14 +54,14 @@ class TestGCSBucketE2E:
         blobs = self.bucket.list_files()
         blob = self.bucket.get_file(blobs[0])
         download_path = f"tests/delete-downloaded-{blob.name}"
-        self.bucket.download_file(blob.name, download_path)
+        self.bucket.download(blob.name, download_path)
         assert os.path.exists(download_path)
         os.remove(download_path)
 
     @pytest.mark.e2e
     def test_download_directory(self):
         download_path = "tests/data/root3"
-        self.bucket.download_file("root3/", download_path)
+        self.bucket.download("root3/", download_path)
         assert os.path.exists(download_path)
         assert os.listdir(download_path) == [
             "subdir",
@@ -129,7 +129,7 @@ class TestDownloadMock:
         mock_blob3.download_to_filename = MagicMock()
 
         local_path = Path("tests/data/local_test_dir")
-        gcs_bucket.download_file("test_dir/", local_path)
+        gcs_bucket.download("test_dir/", local_path)
 
         mock_blob1.download_to_filename.assert_called_once_with(
             local_path / "file1.txt"
@@ -158,7 +158,7 @@ class TestDownloadMock:
 
         file_name = "test_file.txt"
         local_path = Path("local_test_file.txt")
-        gcs_bucket.download_file(file_name, str(local_path))
+        gcs_bucket.download(file_name, str(local_path))
 
         mock_bucket.blob.assert_called_once_with(file_name)
         mock_blob.download_to_filename.assert_called_once_with(str(local_path))

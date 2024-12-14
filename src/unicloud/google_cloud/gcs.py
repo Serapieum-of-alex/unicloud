@@ -295,30 +295,66 @@ class GCSBucket:
         blob.upload_from_filename(local_path)
         print(f"File {local_path} uploaded to {bucket_path}.")
 
-    def download_file(self, file_name, local_path):
+    def download(self, file_name, local_path):
         """Download a file from GCS.
+
+        Downloads a file from a Google Cloud Storage bucket to a local directory or path.
+
+        This method retrieves a file from a specified bucket and saves it to a given local path.
+        If the `file_name` points to a directory (ends with a '/'), it recursively downloads all
+        files in that directory, preserving the directory structure locally.
 
         Parameters
         ----------
-        file_name: str
-            The name of the file to download.
-        local_path: str
-            The path to save the downloaded file.
+        file_name : str
+            The name of the file or directory to download from the GCS bucket.
+            - For a single file, provide its name (e.g., "example.txt").
+            - For a directory, provide its name ending with a '/' (e.g., "data/").
+        local_path : Union[str, Path]
+            The local destination where the file(s) will be saved.
+            - For a single file, provide the full path including the file name (e.g., "local/example.txt").
+            - For a directory download, provide the base path (e.g., "local/data/").
+
+        Raises
+        ------
+        FileNotFoundError
+            If the specified file or directory does not exist in the bucket.
+        ValueError
+            If the local path cannot be created or is invalid.
 
         Examples
         --------
-        >>> Bucket_ID = "test-bucket"
-        >>> PROJECT_ID = "py-project-id"
-        >>> gcs = GCS(PROJECT_ID)  # doctest: +SKIP
-        >>> my_bucket = gcs.get_bucket(Bucket_ID)   # doctest: +SKIP
-        >>> file_name = "my-file.txt"
-        >>> local_path = "path/to/local/my-file.txt"
-        >>> my_bucket.download_file(file_name, local_path)  # doctest: +SKIP
+        To download a file or directory from a GCS bucket, you can use the `download` method:
+            >>> Bucket_ID = "test-bucket"
+            >>> PROJECT_ID = "py-project-id"
+            >>> gcs = GCS(PROJECT_ID)  # doctest: +SKIP
+            >>> my_bucket = gcs.get_bucket(Bucket_ID)   # doctest: +SKIP
+
+        Download a single file:
+            >>> my_bucket.download("example.txt", "local/example.txt")   # doctest: +SKIP
+
+        Download all files in a directory:
+            >>> my_bucket.download("data/", "local/data/")   # doctest: +SKIP
+
+        Notes
+        -----
+        - When downloading a directory, any subdirectories and their files will also be downloaded.
+        - The method ensures the creation of required local directories for the downloaded files.
+        - This method supports both absolute and relative paths for the local destination.
+        - The `file_name` is case-sensitive and must match the exact name in the GCS bucket.
+
+        Warnings
+        --------
+        Ensure that the provided `local_path` has sufficient disk space for all files
+        being downloaded, especially for large directories.
+
+        See Also
+        --------
+        upload_file : To upload a file from a local path to a GCS bucket.
+
         """
         if file_name.endswith("/"):
-            blobs = self.bucket.list_blobs(
-                prefix=file_name
-            )  # List all files in the directory
+            blobs = self.bucket.list_blobs(prefix=file_name)
             for blob in blobs:
                 if blob.name.endswith("/"):
                     continue
@@ -326,6 +362,7 @@ class GCSBucket:
                 # Remove the directory prefix to get the relative path
                 relative_path = Path(blob.name).relative_to(file_name)
                 local_file_path = local_path / relative_path
+
                 # Ensure the directory structure exists
                 local_file_path.parent.mkdir(parents=True, exist_ok=True)
                 blob.download_to_filename(local_file_path)
