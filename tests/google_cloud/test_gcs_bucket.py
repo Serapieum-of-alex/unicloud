@@ -1,3 +1,4 @@
+import fnmatch
 import os
 import shutil
 from pathlib import Path
@@ -87,33 +88,114 @@ class TestGCSBucketE2E:
 
 
 @pytest.mark.mock
-def test_search():
-    # Mock bucket and blobs
-    mock_bucket = MagicMock()
-    # Create mock blobs with specific names
-    mock_blob1 = MagicMock()
-    mock_blob1.name = "file1.txt"
-    mock_blob2 = MagicMock()
-    mock_blob2.name = "data/file2.txt"
-    mock_blob3 = MagicMock()
-    mock_blob3.name = "data/file3.log"
-    mock_blob4 = MagicMock()
-    mock_blob4.name = "logs/log1.txt"
-    mock_bucket.list_blobs.return_value = [
-        mock_blob1,
-        mock_blob2,
-        mock_blob3,
-        mock_blob4,
-    ]
+class TestListFilesMock:
 
-    gcs_bucket = Bucket(mock_bucket)
+    def setup_method(self):
+        # Mock bucket and blobs
+        self.mock_bucket = MagicMock()
+        self.mock_blob1 = MagicMock()
+        self.mock_blob1.name = "file1.txt"
+        self.mock_blob2 = MagicMock()
+        self.mock_blob2.name = "data/file2.csv"
+        self.mock_blob3 = MagicMock()
+        self.mock_blob3.name = "data/file3.log"
+        self.mock_blob4 = MagicMock()
+        self.mock_blob4.name = "logs/log1.txt"
 
-    matching_files = gcs_bucket.search("*.txt")
-    assert matching_files == ["file1.txt", "data/file2.txt", "logs/log1.txt"]
+        self.mock_bucket.list_blobs.return_value = [
+            self.mock_blob1,
+            self.mock_blob2,
+            self.mock_blob3,
+            self.mock_blob4,
+        ]
 
-    # Test glob_files within a directory
-    matching_files = gcs_bucket.search("*.txt", directory="data")
-    assert matching_files == ["data/file2.txt"]
+        self.gcs_bucket = Bucket(self.mock_bucket)
+
+    def test_list_all_files(self):
+        """Test listing all files in the bucket."""
+        files = self.gcs_bucket.list_files()
+        assert files == [
+            "file1.txt",
+            "data/file2.csv",
+            "data/file3.log",
+            "logs/log1.txt",
+        ]
+        self.mock_bucket.list_blobs.assert_called_once_with(
+            prefix=None, max_results=None
+        )
+
+    def test_list_files_with_prefix(self):
+        """Test listing files with a prefix."""
+        self.mock_bucket.list_blobs.side_effect = lambda prefix, max_results: [
+            blob
+            for blob in [self.mock_blob2, self.mock_blob3]
+            if blob.name.startswith(prefix)
+        ]
+
+        # List files with prefix
+        files = self.gcs_bucket.list_files(prefix="data/")
+        assert files == ["data/file2.csv", "data/file3.log"]
+        self.mock_bucket.list_blobs.assert_called_once_with(
+            prefix="data/", max_results=None
+        )
+
+    def test_list_files_with_pattern(self):
+        """Test listing files with a pattern."""
+        files = self.gcs_bucket.list_files(pattern="*.txt")
+        expected_files = [
+            blob.name
+            for blob in [self.mock_blob1, self.mock_blob4]
+            if fnmatch.fnmatch(blob.name, "*.txt")
+        ]
+        assert files == expected_files
+
+    def test_list_files_with_prefix_and_pattern(self):
+        """Test listing files with a prefix and pattern."""
+        self.mock_bucket.list_blobs.side_effect = lambda prefix, max_results: [
+            blob
+            for blob in [self.mock_blob2, self.mock_blob3]
+            if blob.name.startswith(prefix)
+        ]
+
+        # List files with prefix and pattern
+        files = self.gcs_bucket.list_files(prefix="data/", pattern="*.csv")
+        expected_files = [
+            blob.name
+            for blob in [self.mock_blob2]
+            if fnmatch.fnmatch(blob.name, "*.csv")
+        ]
+        assert files == expected_files
+
+    def test_list_files_with_max_results(self):
+        """Test listing files with a maximum number of results."""
+        self.mock_bucket.list_blobs.side_effect = lambda prefix, max_results: [
+            self.mock_blob1,
+            self.mock_blob2,
+        ][:max_results]
+
+        # List files with max results
+        files = self.gcs_bucket.list_files(max_results=2)
+        assert files == ["file1.txt", "data/file2.csv"]
+        self.mock_bucket.list_blobs.assert_called_once_with(prefix=None, max_results=2)
+
+    def test_list_files_with_all_filters(self):
+        """Test listing files with all filters."""
+        self.mock_bucket.list_blobs.side_effect = lambda prefix, max_results: [
+            blob
+            for blob in [self.mock_blob2, self.mock_blob3]
+            if blob.name.startswith(prefix)
+        ][:max_results]
+
+        # List files with prefix, pattern, and max results
+        files = self.gcs_bucket.list_files(
+            prefix="data/", pattern="*.log", max_results=2
+        )
+        expected_files = [
+            blob.name
+            for blob in [self.mock_blob3]
+            if fnmatch.fnmatch(blob.name, "*.log")
+        ][:1]
+        assert files == expected_files
 
 
 class TestDeleteE2E:

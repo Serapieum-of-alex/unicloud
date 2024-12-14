@@ -238,9 +238,53 @@ class Bucket:
         """bucket."""
         return self._bucket
 
-    def list_files(self) -> List[str]:
-        """list_blobs."""
-        return [blob.name for blob in self.bucket.list_blobs()]
+    def list_files(
+        self,
+        prefix: Optional[str] = None,
+        max_results: Optional[int] = None,
+        pattern: Optional[str] = None,
+    ) -> List[str]:
+        """
+        List files in the GCS bucket with optional filtering and limits.
+
+        Parameters
+        ----------
+        prefix : Optional[str]
+            A prefix to filter files (e.g., 'folder/' to list files under 'folder/').
+        max_results : Optional[int]
+            Maximum number of files to list.
+        pattern : Optional[str]
+            A glob pattern to filter files (e.g., '*.txt', 'data/*.csv').
+
+        Returns
+        -------
+        List[str]
+            A list of file names in the bucket.
+
+        Examples
+        --------
+        >>> Bucket_ID = "test-bucket"
+        >>> PROJECT_ID = "py-project-id"
+        >>> gcs = GCS(PROJECT_ID)
+        >>> my_bucket = gcs.get_bucket(Bucket_ID)
+
+        List all files in the bucket:
+            >>> files = my_bucket.list_files()  # doctest: +SKIP
+
+        List files in a specific folder:
+            >>> files = my_bucket.list_files(prefix="data/")    # doctest: +SKIP
+
+        List the first 10 files:
+            >>> files = my_bucket.list_files(max_results=10)    # doctest: +SKIP
+        """
+        blobs = self.bucket.list_blobs(prefix=prefix, max_results=max_results)
+        file_names = [blob.name for blob in blobs]
+
+        # Apply pattern matching if a pattern is provided
+        if pattern:
+            file_names = [name for name in file_names if fnmatch.fnmatch(name, pattern)]
+
+        return file_names
 
     def get_file(self, blob_id) -> storage.blob.Blob:
         """get_blob."""
@@ -474,51 +518,3 @@ class Bucket:
                 print(f"Blob {file_path} deleted.")
             else:
                 raise ValueError(f"File {file_path} not found in the bucket.")
-
-    def search(self, pattern: str = "*", directory: Optional[str] = None) -> List[str]:
-        """Find files in the bucket matching a pattern, optionally within a specific directory.
-
-        Parameters
-        ----------
-        pattern : str
-            The pattern to match files against (e.g., '*.txt', 'data/*.json').
-        directory : Optional[str]
-            The directory in the bucket to search within (e.g., 'data/', 'logs/').
-            If None, the entire bucket is searched.
-
-        Returns
-        -------
-        List[str]
-            List of file names in the bucket that match the pattern.
-
-        Examples
-        --------
-        - Initialize the GCS object
-
-            >>> bucket = "my-bucket"
-            >>> PROJECT_ID = "my-project-id"
-            >>> gcs = GCS(PROJECT_ID) # doctest: +SKIP
-            >>> my_bucket = gcs.get_bucket(bucket) # doctest: +SKIP
-
-        - Glob across the entire bucket
-
-            >>> matching_files = my_bucket.search("*.txt") # doctest: +SKIP
-
-        - Glob within a specific directory
-
-            >>> matching_files = my_bucket.search("*.txt", directory="data/")   # doctest: +SKIP
-        """
-        # Ensure the directory ends with a slash if specified
-        if directory and not directory.endswith("/"):
-            directory += "/"
-
-        # Use prefix to narrow down results if a directory is specified
-        prefix = directory if directory else ""
-        blobs = self.bucket.list_blobs(prefix=prefix)
-
-        # Filter blobs by the pattern
-        return [
-            blob.name
-            for blob in blobs
-            if fnmatch.fnmatch(blob.name, f"{prefix}{pattern}")
-        ]
