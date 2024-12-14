@@ -118,6 +118,7 @@ def test_search():
     matching_files = gcs_bucket.search("*.txt", directory="data")
     assert matching_files == ["data/file2.txt"]
 
+
 class TestDeleteE2E:
 
     @pytest.fixture
@@ -152,14 +153,19 @@ class TestDeleteE2E:
 
     def test_delete_nonexistent_file_e2e(self, gcs_bucket: GCSBucket):
         """Test deleting a file that does not exist."""
-        with pytest.raises(ValueError, match="File non_existent_file.txt not found in the bucket."):
+        with pytest.raises(
+            ValueError, match="File non_existent_file.txt not found in the bucket."
+        ):
             gcs_bucket.delete_file("non_existent_file.txt")
 
     def test_delete_empty_directory_e2e(self, gcs_bucket: GCSBucket):
         """Test deleting an empty directory."""
         directory = "empty_directory/"
-        with pytest.raises(ValueError, match=f"No files found in the directory: {directory}"):
+        with pytest.raises(
+            ValueError, match=f"No files found in the directory: {directory}"
+        ):
             gcs_bucket.delete_file(directory)
+
 
 class TestDownloadMock:
 
@@ -272,6 +278,7 @@ class TestUploadMock:
                 str(file)
             )
 
+
 class TestDeleteMock:
 
     @pytest.mark.mock
@@ -299,7 +306,9 @@ class TestDeleteMock:
         gcs_bucket = GCSBucket(mock_bucket)
 
         file_name = "non_existent_file.txt"
-        with pytest.raises(ValueError, match=f"File {file_name} not found in the bucket."):
+        with pytest.raises(
+            ValueError, match=f"File {file_name} not found in the bucket."
+        ):
             gcs_bucket.delete_file(file_name)
 
         mock_bucket.blob.assert_called_once_with(file_name)
@@ -332,7 +341,9 @@ class TestDeleteMock:
         gcs_bucket = GCSBucket(mock_bucket)
 
         directory = "empty_directory/"
-        with pytest.raises(ValueError, match=f"No files found in the directory: {directory}"):
+        with pytest.raises(
+            ValueError, match=f"No files found in the directory: {directory}"
+        ):
             gcs_bucket.delete_file(directory)
 
         mock_bucket.list_blobs.assert_called_once_with(prefix=directory)

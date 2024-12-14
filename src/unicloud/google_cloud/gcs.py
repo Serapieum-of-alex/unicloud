@@ -423,7 +423,7 @@ class GCSBucket:
 
     def delete_file(self, file_path: str):
         """
-        Deletes a file or all files in a directory from the GCS bucket.
+        Delete a file or all files in a directory from the GCS bucket.
 
         If the `file_path` ends with a '/', it is treated as a directory, and all files
         within that directory (including subdirectories) are deleted. Otherwise, it deletes

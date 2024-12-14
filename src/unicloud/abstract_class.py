@@ -1,4 +1,5 @@
-""" This module contains the abstract class for cloud storage factory. """
+"""This module contains the abstract class for cloud storage factory."""
+
 from abc import ABC, abstractmethod
 
 
@@ -7,9 +8,7 @@ class CloudStorageFactory(ABC):
 
     @abstractmethod
     def create_client(self):
-        """
-        Create the cloud storage client.
-        """
+        """Create the cloud storage client."""
         pass
 
     @abstractmethod

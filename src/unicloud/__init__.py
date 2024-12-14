@@ -1,4 +1,5 @@
 """unicloud."""
+
 try:
     from importlib.metadata import PackageNotFoundError, version  # type: ignore
 except ImportError:  # pragma: no cover
