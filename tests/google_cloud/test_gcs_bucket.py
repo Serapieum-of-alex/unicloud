@@ -38,7 +38,7 @@ class TestGCSBucketE2E:
 
     def test_upload_file(self, test_file: Path):
         bucket_path = f"test-upload-gcs-bucket-{test_file.name}"
-        self.bucket.upload_file(test_file, bucket_path)
+        self.bucket.upload(test_file, bucket_path)
         assert any(blob.name == bucket_path for blob in self.bucket.bucket.list_blobs())
         self.bucket.delete(bucket_path)
 
@@ -48,7 +48,7 @@ class TestGCSBucketE2E:
         local_dir = upload_test_data["local_dir"]
         bucket_path = upload_test_data["bucket_path"]
 
-        self.bucket.upload_file(local_dir, bucket_path)
+        self.bucket.upload(local_dir, bucket_path)
 
         uploaded_files = [blob.name for blob in self.bucket.bucket.list_blobs()]
         expected_files = upload_test_data["expected_files"]
@@ -81,7 +81,7 @@ class TestGCSBucketE2E:
         shutil.rmtree(download_path)
 
     def test_delete_file(self, test_file):
-        self.bucket.upload_file(str(test_file), str(test_file))
+        self.bucket.upload(str(test_file), str(test_file))
         self.bucket.delete(str(test_file))
         assert str(test_file) not in self.bucket.list_files()
 
@@ -237,7 +237,7 @@ class TestUploadMock:
         with patch("pathlib.Path.exists", return_value=True), patch(
             "pathlib.Path.is_file", return_value=True
         ):
-            gcs_bucket.upload_file(local_file, bucket_path)
+            gcs_bucket.upload(local_file, bucket_path)
 
         mock_bucket.blob.assert_called_once_with(bucket_path)
         mock_blob.upload_from_filename.assert_called_once_with(str(local_file))
@@ -265,7 +265,7 @@ class TestUploadMock:
 
             # Mock individual file checks and uploads
             with patch("pathlib.Path.is_file", side_effect=[False, True, True, True]):
-                gcs_bucket.upload_file(local_directory, bucket_path)
+                gcs_bucket.upload(local_directory, bucket_path)
 
         for file in files:
             relative_path = file.relative_to(local_directory)

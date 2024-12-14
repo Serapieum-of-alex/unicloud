@@ -271,7 +271,7 @@ class GCSBucket:
         blob = self.bucket.get_blob(file_name)
         return False if blob is None else True
 
-    def upload_file(self, local_path: Union[str, Path], bucket_path: Union[str, Path]):
+    def upload(self, local_path: Union[str, Path], bucket_path: Union[str, Path]):
         """Upload a file to GCS.
 
         Uploads a file or an entire directory to a Google Cloud Storage bucket.
@@ -305,10 +305,10 @@ class GCSBucket:
         >>> my_bucket = gcs.get_bucket(Bucket_ID)   # doctest: +SKIP
 
         Upload a single file:
-            >>> my_bucket.upload_file("local/file.txt", "bucket/folder/file.txt")  # doctest: +SKIP
+            >>> my_bucket.upload("local/file.txt", "bucket/folder/file.txt")  # doctest: +SKIP
 
         Upload an entire directory:
-            >>> my_bucket.upload_file("local/directory/", "bucket/folder/")     # doctest: +SKIP
+            >>> my_bucket.upload("local/directory/", "bucket/folder/")     # doctest: +SKIP
 
         Notes
         -----
