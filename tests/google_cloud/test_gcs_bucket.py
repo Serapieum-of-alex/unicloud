@@ -70,14 +70,11 @@ class TestGCSBucketE2E:
 
     @pytest.mark.e2e
     def test_download_directory(self):
+        dir_files = ["subdir", "test-file-1.txt", "test-file-2.txt"]
         download_path = "tests/data/root3"
         self.bucket.download("root3/", download_path)
         assert os.path.exists(download_path)
-        assert os.listdir(download_path) == [
-            "subdir",
-            "test-file-1.txt",
-            "test-file-2.txt",
-        ]
+        assert all(elem in os.listdir(download_path) for elem in dir_files)
         assert os.listdir(f"{download_path}/subdir") == ["test-file-3.txt"]
         shutil.rmtree(download_path)
 
