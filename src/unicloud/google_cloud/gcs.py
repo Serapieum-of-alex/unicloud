@@ -421,13 +421,20 @@ class GCSBucket:
             blob.download_to_filename(local_path)
             print(f"File {file_name} downloaded to {local_path}.")
 
-    def delete_file(self, blob_id: str):
-        """delete_blob.
+    def delete_file(self, file_path: str):
+        """
+        Deletes a file or all files in a directory from the GCS bucket.
+
+        If the `file_path` ends with a '/', it is treated as a directory, and all files
+        within that directory (including subdirectories) are deleted. Otherwise, it deletes
+        the specified file.
 
         Parameters
         ----------
-        blob_id : [str]
-            blob id
+        file_path : str
+            The path to the file or directory in the GCS bucket.
+            - For a single file, provide the file name (e.g., "example.txt").
+            - For a directory, provide the path ending with '/' (e.g., "data/").
 
         Examples
         --------
@@ -436,10 +443,37 @@ class GCSBucket:
         >>> gcs = GCS(PROJECT_ID) # doctest: +SKIP
         >>> my_bucket = gcs.get_bucket(Bucket_ID) # doctest: +SKIP
         >>> my_bucket.delete_file("my-file.txt") # doctest: +SKIP
+
+        Delete a single file:
+            >>> my_bucket.delete_file("example.txt") # doctest: +SKIP
+
+        Delete a directory and its contents:
+            >>> my_bucket.delete_file("data/") # doctest: +SKIP
+
+        Raises
+        ------
+        ValueError
+            If the specified path is invalid or not found in the bucket.
         """
-        blob = self.bucket.blob(blob_id)
-        blob.delete()
-        print(f"Blob {blob_id} deleted.")
+        if file_path.endswith("/"):
+            # Delete all files in the directory
+            blobs = self.bucket.list_blobs(prefix=file_path)
+            deleted_files = []
+            for blob in blobs:
+                blob.delete()
+                deleted_files.append(blob.name)
+                print(f"Deleted file: {blob.name}")
+
+            if not deleted_files:
+                raise ValueError(f"No files found in the directory: {file_path}")
+        else:
+            # Delete a single file
+            blob = self.bucket.blob(file_path)
+            if blob.exists():
+                blob.delete()
+                print(f"Blob {file_path} deleted.")
+            else:
+                raise ValueError(f"File {file_path} not found in the bucket.")
 
     def search(self, pattern: str = "*", directory: Optional[str] = None) -> List[str]:
         """Find files in the bucket matching a pattern, optionally within a specific directory.
