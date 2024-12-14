@@ -421,7 +421,7 @@ class GCSBucket:
             blob.download_to_filename(local_path)
             print(f"File {file_name} downloaded to {local_path}.")
 
-    def delete_file(self, file_path: str):
+    def delete(self, file_path: str):
         """
         Delete a file or all files in a directory from the GCS bucket.
 
@@ -442,13 +442,13 @@ class GCSBucket:
         >>> PROJECT_ID = "py-project-id"
         >>> gcs = GCS(PROJECT_ID) # doctest: +SKIP
         >>> my_bucket = gcs.get_bucket(Bucket_ID) # doctest: +SKIP
-        >>> my_bucket.delete_file("my-file.txt") # doctest: +SKIP
+        >>> my_bucket.delete("my-file.txt") # doctest: +SKIP
 
         Delete a single file:
-            >>> my_bucket.delete_file("example.txt") # doctest: +SKIP
+            >>> my_bucket.delete("example.txt") # doctest: +SKIP
 
         Delete a directory and its contents:
-            >>> my_bucket.delete_file("data/") # doctest: +SKIP
+            >>> my_bucket.delete("data/") # doctest: +SKIP
 
         Raises
         ------

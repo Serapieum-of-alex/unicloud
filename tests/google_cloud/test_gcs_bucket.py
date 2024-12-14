@@ -40,7 +40,7 @@ class TestGCSBucketE2E:
         bucket_path = f"test-upload-gcs-bucket-{test_file.name}"
         self.bucket.upload_file(test_file, bucket_path)
         assert any(blob.name == bucket_path for blob in self.bucket.bucket.list_blobs())
-        self.bucket.delete_file(bucket_path)
+        self.bucket.delete(bucket_path)
 
     def test_upload_directory_with_subdirectories_e2e(
         self, upload_test_data: Dict[str, Path]
@@ -82,7 +82,7 @@ class TestGCSBucketE2E:
 
     def test_delete_file(self, test_file):
         self.bucket.upload_file(str(test_file), str(test_file))
-        self.bucket.delete_file(str(test_file))
+        self.bucket.delete(str(test_file))
         assert str(test_file) not in self.bucket.list_files()
 
 
@@ -128,7 +128,7 @@ class TestDeleteE2E:
         blob.upload_from_string("Test content")
         assert gcs_bucket.file_exists("test_delete_single.txt")
 
-        gcs_bucket.delete_file("test_delete_single.txt")
+        gcs_bucket.delete("test_delete_single.txt")
         assert not gcs_bucket.file_exists("test_delete_single.txt")
 
     def test_delete_directory_e2e(self, gcs_bucket: GCSBucket):
@@ -142,7 +142,7 @@ class TestDeleteE2E:
         assert gcs_bucket.file_exists("test_directory/subdir/file2.txt")
 
         # Delete the directory
-        gcs_bucket.delete_file("test_directory/")
+        gcs_bucket.delete("test_directory/")
 
         # Verify files are deleted
         assert not gcs_bucket.file_exists("test_directory/file1.txt")
@@ -153,7 +153,7 @@ class TestDeleteE2E:
         with pytest.raises(
             ValueError, match="File non_existent_file.txt not found in the bucket."
         ):
-            gcs_bucket.delete_file("non_existent_file.txt")
+            gcs_bucket.delete("non_existent_file.txt")
 
     def test_delete_empty_directory_e2e(self, gcs_bucket: GCSBucket):
         """Test deleting an empty directory."""
@@ -161,7 +161,7 @@ class TestDeleteE2E:
         with pytest.raises(
             ValueError, match=f"No files found in the directory: {directory}"
         ):
-            gcs_bucket.delete_file(directory)
+            gcs_bucket.delete(directory)
 
 
 class TestDownloadMock:
@@ -288,7 +288,7 @@ class TestDeleteMock:
         gcs_bucket = GCSBucket(mock_bucket)
 
         file_name = "example.txt"
-        gcs_bucket.delete_file(file_name)
+        gcs_bucket.delete(file_name)
 
         mock_bucket.blob.assert_called_once_with(file_name)
         mock_blob.delete.assert_called_once()
@@ -306,7 +306,7 @@ class TestDeleteMock:
         with pytest.raises(
             ValueError, match=f"File {file_name} not found in the bucket."
         ):
-            gcs_bucket.delete_file(file_name)
+            gcs_bucket.delete(file_name)
 
         mock_bucket.blob.assert_called_once_with(file_name)
         mock_blob.delete.assert_not_called()
@@ -323,7 +323,7 @@ class TestDeleteMock:
         gcs_bucket = GCSBucket(mock_bucket)
 
         directory = "data/"
-        gcs_bucket.delete_file(directory)
+        gcs_bucket.delete(directory)
 
         mock_bucket.list_blobs.assert_called_once_with(prefix=directory)
         mock_blob1.delete.assert_called_once()
@@ -341,6 +341,6 @@ class TestDeleteMock:
         with pytest.raises(
             ValueError, match=f"No files found in the directory: {directory}"
         ):
-            gcs_bucket.delete_file(directory)
+            gcs_bucket.delete(directory)
 
         mock_bucket.list_blobs.assert_called_once_with(prefix=directory)
