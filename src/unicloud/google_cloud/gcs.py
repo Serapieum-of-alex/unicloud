@@ -3,7 +3,7 @@
 import fnmatch
 import os
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from google.cloud import storage
 from google.oauth2 import service_account
@@ -271,15 +271,31 @@ class GCSBucket:
         blob = self.bucket.get_blob(file_name)
         return False if blob is None else True
 
-    def upload_file(self, local_path, bucket_path):
+    def upload_file(self, local_path: Union[str, Path], bucket_path: Union[str, Path]):
         """Upload a file to GCS.
+
+        Uploads a file or an entire directory to a Google Cloud Storage bucket.
+
+        If the `local_path` is a directory, this method recursively uploads all files
+        and subdirectories to the specified `bucket_path` in the GCS bucket.
 
         Parameters
         ----------
-        local_path: [str]
-            The path to the file to upload.
-        bucket_path: [str]
-            The path in the bucket, this path has to have the bucket id as the first path of the path.
+        local_path : Union[str, Path]
+            The path to the local file or directory to upload.
+            - For a single file, provide the full path to the file (e.g., "path/to/file.txt").
+            - For a directory, provide the path to the directory (e.g., "path/to/directory/").
+        bucket_path : str
+            The destination path in the GCS bucket where the file(s) will be uploaded.
+            - For a single file, provide the full path (e.g., "bucket/folder/file.txt").
+            - For a directory upload, provide the base path (e.g., "bucket/folder/").
+
+        Raises
+        ------
+        FileNotFoundError
+            If the `local_path` does not exist.
+        ValueError
+            If the `local_path` is neither a file nor a directory.
 
         Examples
         --------
@@ -287,13 +303,45 @@ class GCSBucket:
         >>> PROJECT_ID = "py-project-id"
         >>> gcs = GCS(PROJECT_ID)   # doctest: +SKIP
         >>> my_bucket = gcs.get_bucket(Bucket_ID)   # doctest: +SKIP
-        >>> local_path = "path/to/local/my-file.txt"
-        >>> bucket_path = "my-file.txt"
-        >>> my_bucket.upload_file(file_path, bucket_path) # doctest: +SKIP
+
+        Upload a single file:
+            >>> my_bucket.upload_file("local/file.txt", "bucket/folder/file.txt")  # doctest: +SKIP
+
+        Upload an entire directory:
+            >>> my_bucket.upload_file("local/directory/", "bucket/folder/")     # doctest: +SKIP
+
+        Notes
+        -----
+        - For directory uploads, the relative structure of the local directory will be preserved in the GCS bucket.
+        - Ensure the `bucket_path` is valid and writable.
+
         """
-        blob = self.bucket.blob(bucket_path)
-        blob.upload_from_filename(local_path)
-        print(f"File {local_path} uploaded to {bucket_path}.")
+        local_path = Path(local_path)
+
+        if not local_path.exists():
+            raise FileNotFoundError(f"The local path {local_path} does not exist.")
+
+        if local_path.is_file():
+            # Upload a single file
+            blob = self.bucket.blob(bucket_path)
+            blob.upload_from_filename(str(local_path))
+            print(f"File {local_path} uploaded to {bucket_path}.")
+        elif local_path.is_dir():
+            # Upload all files in the directory
+            for file in local_path.rglob("*"):
+                if file.is_file():
+                    # Preserve directory structure in the bucket
+                    relative_path = file.relative_to(local_path)
+                    bucket_file_path = (
+                        f"{bucket_path.rstrip('/')}/{relative_path.as_posix()}"
+                    )
+                    blob = self.bucket.blob(bucket_file_path)
+                    blob.upload_from_filename(str(file))
+                    print(f"File {file} uploaded to {bucket_file_path}.")
+        else:
+            raise ValueError(
+                f"The local path {local_path} is neither a file nor a directory."
+            )
 
     def download(self, file_name, local_path):
         """Download a file from GCS.

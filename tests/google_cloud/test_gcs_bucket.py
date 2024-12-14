@@ -1,8 +1,8 @@
 import os
 import shutil
-import uuid
 from pathlib import Path
-from unittest.mock import MagicMock
+from typing import Dict
+from unittest.mock import MagicMock, patch
 
 import pytest
 from google.cloud import storage
@@ -33,21 +33,33 @@ class TestGCSBucketE2E:
         assert isinstance(blob, storage.blob.Blob)
 
     def test_file_exists(self):
-        # check file that exists
         assert self.bucket.file_exists("211102_rabo_all_aois.geojson")
-        # check file that does not exist
         assert not self.bucket.file_exists("non_existent_file.geojson")
 
-    def test_upload_file(self):
-        # Create a local file to upload
-        test_file_name = f"test-file-{uuid.uuid4()}.txt"
-        test_file_content = "This is a test file."
-        with open(test_file_name, "w") as f:
-            f.write(test_file_content)
+    def test_upload_file(self, test_file: Path):
+        bucket_path = f"test-upload-gcs-bucket-{test_file.name}"
+        self.bucket.upload_file(test_file, bucket_path)
+        assert any(blob.name == bucket_path for blob in self.bucket.bucket.list_blobs())
+        # delete the uploaded file
+        # self.bucket.delete_file(bucket_path)
+        # self.bucket.bucket.blob(bucket_path).delete()
 
-        self.bucket.upload_file(
-            test_file_name, f"test-upload-gcs-bucket/{test_file_name}"
-        )
+    def test_upload_directory_with_subdirectories_e2e(
+        self, upload_test_data: Dict[str, Path]
+    ):
+
+        local_dir = upload_test_data["local_dir"]
+        bucket_path = upload_test_data["bucket_path"]
+
+        self.bucket.upload_file(local_dir, bucket_path)
+
+        uploaded_files = [blob.name for blob in self.bucket.bucket.list_blobs()]
+        expected_files = upload_test_data["expected_files"]
+        assert set(uploaded_files) & expected_files == expected_files
+
+        # Cleanup
+        for blob_name in list(expected_files):
+            self.bucket.bucket.blob(blob_name).delete()
 
     @pytest.mark.e2e
     def test_download_single_file(self):
@@ -162,3 +174,58 @@ class TestDownloadMock:
 
         mock_bucket.blob.assert_called_once_with(file_name)
         mock_blob.download_to_filename.assert_called_once_with(str(local_path))
+
+
+class TestUploadMock:
+
+    def test_upload_single_file(self):
+
+        mock_blob = MagicMock()
+        mock_bucket = MagicMock()
+        mock_bucket.blob.return_value = mock_blob
+
+        gcs_bucket = GCSBucket(mock_bucket)
+
+        local_file = Path("local/file.txt")
+        bucket_path = "bucket/folder/file.txt"
+
+        with patch("pathlib.Path.exists", return_value=True), patch(
+            "pathlib.Path.is_file", return_value=True
+        ):
+            gcs_bucket.upload_file(local_file, bucket_path)
+
+        mock_bucket.blob.assert_called_once_with(bucket_path)
+        mock_blob.upload_from_filename.assert_called_once_with(str(local_file))
+
+    def test_upload_directory_with_subdirectories(self):
+
+        mock_bucket = MagicMock()
+        gcs_bucket = GCSBucket(mock_bucket)
+
+        # Mock directory and files
+        local_directory = Path("local/directory")
+        bucket_path = "bucket/folder"
+        files = [
+            local_directory / "file1.txt",
+            local_directory / "subdir" / "file2.txt",
+            local_directory / "subdir" / "file3.log",
+        ]
+
+        # Mock rglob and existence checks
+        with (
+            patch("pathlib.Path.exists", return_value=True),
+            patch("pathlib.Path.is_dir", return_value=True),
+            patch("pathlib.Path.rglob", return_value=files),
+        ):
+
+            # Mock individual file checks and uploads
+            with patch("pathlib.Path.is_file", side_effect=[False, True, True, True]):
+                gcs_bucket.upload_file(local_directory, bucket_path)
+
+        for file in files:
+            relative_path = file.relative_to(local_directory)
+            bucket_file_path = f"{bucket_path}/{relative_path.as_posix()}"
+            mock_bucket.blob.assert_any_call(bucket_file_path)
+            mock_bucket.blob(bucket_file_path).upload_from_filename.assert_any_call(
+                str(file)
+            )
