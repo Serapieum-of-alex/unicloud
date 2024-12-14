@@ -40,14 +40,11 @@ class TestGCSBucketE2E:
         bucket_path = f"test-upload-gcs-bucket-{test_file.name}"
         self.bucket.upload_file(test_file, bucket_path)
         assert any(blob.name == bucket_path for blob in self.bucket.bucket.list_blobs())
-        # delete the uploaded file
-        # self.bucket.delete_file(bucket_path)
-        # self.bucket.bucket.blob(bucket_path).delete()
+        self.bucket.delete_file(bucket_path)
 
     def test_upload_directory_with_subdirectories_e2e(
         self, upload_test_data: Dict[str, Path]
     ):
-
         local_dir = upload_test_data["local_dir"]
         bucket_path = upload_test_data["bucket_path"]
 
