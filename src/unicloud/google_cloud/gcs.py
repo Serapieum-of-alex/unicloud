@@ -194,7 +194,7 @@ class GCS(CloudStorageFactory):
         blob.download_to_filename(local_path)
         print(f"File {cloud_path} downloaded to {local_path}.")
 
-    def get_bucket(self, bucket_id: str) -> "GCSBucket":
+    def get_bucket(self, bucket_id: str) -> "Bucket":
         """get_bucket.
 
             get_bucket returns the bucket object
@@ -215,10 +215,10 @@ class GCS(CloudStorageFactory):
         >>> bucket_usr = gcs.get_bucket(my_bucket_id)   # doctest: +SKIP
         """
         bucket = storage.Bucket(self.client, bucket_id, user_project=self.project_id)
-        return GCSBucket(bucket)
+        return Bucket(bucket)
 
 
-class GCSBucket:
+class Bucket:
     """GCSBucket."""
 
     def __init__(self, bucket: storage.bucket.Bucket):

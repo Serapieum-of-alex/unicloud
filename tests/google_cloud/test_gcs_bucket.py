@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from google.cloud import storage
 
-from unicloud.google_cloud.gcs import GCS, GCSBucket
+from unicloud.google_cloud.gcs import GCS, Bucket
 
 MY_TEST_BUCKET = "testing-repositories"
 PROJECT_ID = "earth-engine-415620"
@@ -20,7 +20,7 @@ class TestGCSBucketE2E:
         """Set up resources before running tests."""
         client = GCS(PROJECT_ID).client
         bucket = storage.Bucket(client, MY_TEST_BUCKET, user_project=PROJECT_ID)
-        cls.bucket = GCSBucket(bucket)
+        cls.bucket = Bucket(bucket)
 
     def test_list_files(self):
         blobs = self.bucket.list_files()
@@ -106,7 +106,7 @@ def test_search():
         mock_blob4,
     ]
 
-    gcs_bucket = GCSBucket(mock_bucket)
+    gcs_bucket = Bucket(mock_bucket)
 
     matching_files = gcs_bucket.search("*.txt")
     assert matching_files == ["file1.txt", "data/file2.txt", "logs/log1.txt"]
@@ -119,10 +119,10 @@ def test_search():
 class TestDeleteE2E:
 
     @pytest.fixture
-    def gcs_bucket(self) -> GCSBucket:
+    def gcs_bucket(self) -> Bucket:
         return GCS(PROJECT_ID).get_bucket(MY_TEST_BUCKET)
 
-    def test_delete_single_file_e2e(self, gcs_bucket: GCSBucket):
+    def test_delete_single_file_e2e(self, gcs_bucket: Bucket):
 
         blob = gcs_bucket.bucket.blob("test_delete_single.txt")
         blob.upload_from_string("Test content")
@@ -131,7 +131,7 @@ class TestDeleteE2E:
         gcs_bucket.delete("test_delete_single.txt")
         assert not gcs_bucket.file_exists("test_delete_single.txt")
 
-    def test_delete_directory_e2e(self, gcs_bucket: GCSBucket):
+    def test_delete_directory_e2e(self, gcs_bucket: Bucket):
 
         blob1 = gcs_bucket.bucket.blob("test_directory/file1.txt")
         blob1.upload_from_string("File 1 content")
@@ -148,14 +148,14 @@ class TestDeleteE2E:
         assert not gcs_bucket.file_exists("test_directory/file1.txt")
         assert not gcs_bucket.file_exists("test_directory/subdir/file2.txt")
 
-    def test_delete_nonexistent_file_e2e(self, gcs_bucket: GCSBucket):
+    def test_delete_nonexistent_file_e2e(self, gcs_bucket: Bucket):
         """Test deleting a file that does not exist."""
         with pytest.raises(
             ValueError, match="File non_existent_file.txt not found in the bucket."
         ):
             gcs_bucket.delete("non_existent_file.txt")
 
-    def test_delete_empty_directory_e2e(self, gcs_bucket: GCSBucket):
+    def test_delete_empty_directory_e2e(self, gcs_bucket: Bucket):
         """Test deleting an empty directory."""
         directory = "empty_directory/"
         with pytest.raises(
@@ -179,7 +179,7 @@ class TestDownloadMock:
 
         mock_bucket.list_blobs.return_value = [mock_blob1, mock_blob2, mock_blob3]
 
-        gcs_bucket = GCSBucket(mock_bucket)
+        gcs_bucket = Bucket(mock_bucket)
 
         mock_blob1.download_to_filename = MagicMock()
         mock_blob2.download_to_filename = MagicMock()
@@ -209,7 +209,7 @@ class TestDownloadMock:
         mock_blob.name = "test_file.txt"
         mock_bucket.blob.return_value = mock_blob
 
-        gcs_bucket = GCSBucket(mock_bucket)
+        gcs_bucket = Bucket(mock_bucket)
 
         mock_blob.download_to_filename = MagicMock()
 
@@ -229,7 +229,7 @@ class TestUploadMock:
         mock_bucket = MagicMock()
         mock_bucket.blob.return_value = mock_blob
 
-        gcs_bucket = GCSBucket(mock_bucket)
+        gcs_bucket = Bucket(mock_bucket)
 
         local_file = Path("local/file.txt")
         bucket_path = "bucket/folder/file.txt"
@@ -245,7 +245,7 @@ class TestUploadMock:
     def test_upload_directory_with_subdirectories(self):
 
         mock_bucket = MagicMock()
-        gcs_bucket = GCSBucket(mock_bucket)
+        gcs_bucket = Bucket(mock_bucket)
 
         # Mock directory and files
         local_directory = Path("local/directory")
@@ -285,7 +285,7 @@ class TestDeleteMock:
         mock_bucket.blob.return_value = mock_blob
         mock_blob.exists.return_value = True
 
-        gcs_bucket = GCSBucket(mock_bucket)
+        gcs_bucket = Bucket(mock_bucket)
 
         file_name = "example.txt"
         gcs_bucket.delete(file_name)
@@ -300,7 +300,7 @@ class TestDeleteMock:
         mock_bucket.blob.return_value = mock_blob
         mock_blob.exists.return_value = False
 
-        gcs_bucket = GCSBucket(mock_bucket)
+        gcs_bucket = Bucket(mock_bucket)
 
         file_name = "non_existent_file.txt"
         with pytest.raises(
@@ -320,7 +320,7 @@ class TestDeleteMock:
         mock_blob2.name = "data/subdir/file2.txt"
         mock_bucket.list_blobs.return_value = [mock_blob1, mock_blob2]
 
-        gcs_bucket = GCSBucket(mock_bucket)
+        gcs_bucket = Bucket(mock_bucket)
 
         directory = "data/"
         gcs_bucket.delete(directory)
@@ -335,7 +335,7 @@ class TestDeleteMock:
         mock_bucket = MagicMock()
         mock_bucket.list_blobs.return_value = []
 
-        gcs_bucket = GCSBucket(mock_bucket)
+        gcs_bucket = Bucket(mock_bucket)
 
         directory = "empty_directory/"
         with pytest.raises(

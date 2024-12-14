@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from unicloud.google_cloud.gcs import GCS, GCSBucket
+from unicloud.google_cloud.gcs import GCS, Bucket
 
 MY_TEST_BUCKET = "testing-repositories"
 PROJECT_ID = "earth-engine-415620"
@@ -179,4 +179,4 @@ class TestGCSE2E:
 
     def test_get_bucket(self):
         bucket = self.gcs.get_bucket(self.bucket_name)
-        assert isinstance(bucket, GCSBucket)
+        assert isinstance(bucket, Bucket)
