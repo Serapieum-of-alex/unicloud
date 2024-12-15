@@ -3,7 +3,7 @@ import json
 import os
 import unittest
 
-from unicloud.google_cloud.secrets_manager import decode, encode
+from unicloud.google_cloud.utils import decode, encode
 
 
 class TestEncodeDecode(unittest.TestCase):
