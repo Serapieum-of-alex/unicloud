@@ -76,14 +76,45 @@ class GCS(CloudStorageFactory):
         return self._client
 
     def __str__(self) -> str:
-        """__str__."""
+        """
+        Return a string representation of the GCS client.
+
+        Returns
+        -------
+        str
+            A string with the project ID and client scope.
+
+        Examples
+        --------
+        >>> PROJECT_ID = "my-project-id"
+        >>> gcs = GCS(PROJECT_ID) # doctest: +SKIP
+        >>> print(str(gcs))  # doctest: +SKIP
+        project_id: my-project-id,
+        Client Scope=(...)
+        """
         return f"""
         project_id: {self.project_id},
         Client Scope={self.client.SCOPE})
         """
 
     def __repr__(self) -> str:
-        """__repr__."""
+        """__repr__.
+
+        Return a detailed string representation of the GCS client.
+
+        Returns
+        -------
+        str
+            A string representation of the GCS client.
+
+        Examples
+        --------
+        >>> PROJECT_ID = "my-project-id"
+        >>> gcs = GCS(PROJECT_ID)
+        >>> print(repr(gcs))  # doctest: +SKIP
+        project_id: my-project-id,
+        Client Scope=(...)
+        """
         return f"""
         project_id: {self.project_id},
         Client Scope={self.client.SCOPE})
@@ -93,12 +124,19 @@ class GCS(CloudStorageFactory):
     def bucket_list(self) -> List[str]:
         """bucket_list.
 
-            list the buckets
+         List all bucket names in the project.
 
         Returns
         -------
         List[str]
-            list of bucket names
+            A list of bucket names accessible in the project.
+
+        Examples
+        --------
+        >>> PROJECT_ID = "my-project-id"
+        >>> gcs = GCS(PROJECT_ID) # doctest: +SKIP
+        >>> print(gcs.bucket_list)  # doctest: +SKIP
+        ['bucket1', 'bucket2', 'bucket3']
         """
         return [bucket.name for bucket in self.client.list_buckets()]
 
@@ -197,22 +235,26 @@ class GCS(CloudStorageFactory):
     def get_bucket(self, bucket_id: str) -> "Bucket":
         """get_bucket.
 
-            get_bucket returns the bucket object
+        Retrieve a bucket object by its ID.
 
         Parameters
         ----------
-        bucket_id : [str]
-            bucket id
+        bucket_id : str
+            The ID of the bucket to retrieve.
 
         Returns
         -------
-        storage.bucket.Bucket
+        Bucket
+            A `Bucket` object representing the specified bucket.
 
         Examples
         --------
-        >>> my_bucket_id = "datasets"
-        >>> gcs = GCS("py-project-id")  # doctest: +SKIP
-        >>> bucket_usr = gcs.get_bucket(my_bucket_id)   # doctest: +SKIP
+        >>> PROJECT_ID = "my-project-id"
+        >>> BUCKET_ID = "my-bucket-id"
+        >>> gcs = GCS(PROJECT_ID) # doctest: +SKIP
+        >>> bucket = gcs.get_bucket(BUCKET_ID)  # doctest: +SKIP
+        >>> print(bucket)  # doctest: +SKIP
+        Bucket: my-bucket-id
         """
         bucket = storage.Bucket(self.client, bucket_id, user_project=self.project_id)
         return Bucket(bucket)
