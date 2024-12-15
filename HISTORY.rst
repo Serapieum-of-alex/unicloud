@@ -11,3 +11,18 @@ History
 ------------------
 
 * Bump up versions of dependencies.
+
+0.3.0 (2024-12-15)
+------------------
+
+* create a utils module.
+
+dev
+"""
+* move the aws, and gcs modules to submodules `aws` and `google_cloud`.
+
+GCS
+"""
+* Create a `Bucket` class that represents a Google Cloud Storage bucket.
+* The `Bucket` class has methods for uploading, downloading, and deleting files.
+* The `Bucket` class has methods for listing files in the bucket.

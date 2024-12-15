@@ -43,13 +43,16 @@ jobs:
         run: |
           echo "$GCP_SA_KEY" > gcp-key.json
           echo "GOOGLE_APPLICATION_CREDENTIALS=${{ github.workspace }}/gcp-key.json" >> $GITHUB_ENV
+          # verify the credentials
+          gcloud auth activate-service-account --key-file=gcp-key.json
+          gcloud auth list --quiet
 
       - name: Install dependencies with Poetry
         run: |
             echo "Installing dependencies..."
             conda run --name test poetry install
 
-      - name: Generate coverage report
+      - name: Run Tests
         shell: bash -el {0}
         run: |
           conda info

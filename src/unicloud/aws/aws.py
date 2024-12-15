@@ -1,11 +1,14 @@
-""" S3 Cloud Storage"""
+"""S3 Cloud Storage."""
+
 from typing import Optional
-from unicloud.abstract_class import CloudStorageFactory
+
 import boto3
+
+from unicloud.abstract_class import CloudStorageFactory
 
 
 class S3(CloudStorageFactory):
-    """S3 Cloud Storage"""
+    """S3 Cloud Storage."""
 
     def __init__(
         self,
@@ -36,8 +39,7 @@ class S3(CloudStorageFactory):
         return self._client
 
     def create_client(self):
-        """
-        Creates and returns an AWS S3 client instance.
+        """Create and returns an AWS S3 client instance.
 
         initializing the AWS S3 client, passing credentials directly is one option. Another approach is to use AWS
         IAM roles for EC2 instances or to configure the AWS CLI with aws configure, which sets up the credentials
@@ -46,7 +48,6 @@ class S3(CloudStorageFactory):
 
         Initialize the S3 client with AWS credentials and region.
         """
-
         return boto3.client(
             "s3",
             region_name=self.region_name,

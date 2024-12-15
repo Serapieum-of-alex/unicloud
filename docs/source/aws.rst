@@ -51,7 +51,7 @@ The ``AWS`` class provides methods to interact with Amazon Web Services (AWS) S3
          aws_client.download_data('my-s3-bucket', 'path/in/bucket/file.txt', '/local/path/to/save/file.txt')
 
 
-.. automodule:: unicloud.aws
+.. automodule:: unicloud.aws.aws
    :members:
    :undoc-members:
    :show-inheritance:
