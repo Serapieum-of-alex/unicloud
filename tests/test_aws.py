@@ -29,41 +29,35 @@ class TestS3:
         self.bucket_name = MY_TEST_BUCKET
         self.client.client.create_bucket(Bucket=self.bucket_name)
 
-    def test_upload(self):
+    def test_upload(self, test_file: str):
         """Test uploading data to S3."""
-        file_path = "test.txt"
         bucket_name = MY_TEST_BUCKET
         object_name = "test-object"
         destination = f"{bucket_name}/{object_name}"
-        # Create a test file
-        with open(file_path, "w") as f:
-            f.write("Hello, Moto!")
 
-        self.client.upload(file_path, destination)
+        self.client.upload(test_file, destination)
 
         # Check the file exists in the bucket
         response = self.client.client.list_objects_v2(Bucket=self.bucket_name)
         object_keys = [obj["Key"] for obj in response.get("Contents", [])]
         assert object_name in object_keys
 
-    def test_download_data(self):
+    def test_download_data(self, test_file: str, test_file_content: str):
         """Test downloading data from S3."""
 
-        content = "Download me, Moto!"
-        file_path = "test.txt"
         bucket_name = MY_TEST_BUCKET
         object_name = "test-object.txt"
         bucket_path = f"{bucket_name}/{object_name}"
         # Manually upload a file to mock S3 to download later
         self.client.client.put_object(
-            Bucket=self.bucket_name, Key=object_name, Body=content
+            Bucket=self.bucket_name, Key=object_name, Body=test_file_content
         )
-
-        self.client.download(bucket_path, file_path)
+        download_path = "tests/data/test-download-aws.txt"
+        self.client.download(bucket_path, download_path)
 
         # Verify the file was downloaded correctly
-        with open(file_path, "r") as f:
-            assert f.read() == content
+        with open(download_path, "r") as f:
+            assert f.read() == test_file_content
 
 
 @pytest.fixture
