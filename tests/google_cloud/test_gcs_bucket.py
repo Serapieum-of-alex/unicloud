@@ -64,7 +64,7 @@ class TestGCSBucketE2E:
         blobs = self.bucket.list_files()
         blob = self.bucket.get_file(blobs[0])
         download_path = f"tests/delete-downloaded-{blob.name}"
-        self.bucket.download(blob.name, download_path)
+        self.bucket.download(blob.name, download_path, overwrite=True)
         assert os.path.exists(download_path)
         os.remove(download_path)
 
@@ -72,7 +72,7 @@ class TestGCSBucketE2E:
     def test_download_directory(self):
         dir_files = ["subdir", "test-file-1.txt", "test-file-2.txt"]
         download_path = "tests/data/root3"
-        self.bucket.download("root3/", download_path)
+        self.bucket.download("root3/", download_path, overwrite=True)
         assert os.path.exists(download_path)
         assert all(elem in os.listdir(download_path) for elem in dir_files)
         assert os.listdir(f"{download_path}/subdir") == ["test-file-3.txt"]

@@ -561,7 +561,7 @@ class Bucket:
                 )
                 self._upload_file(file, bucket_file_path, overwrite)
 
-    def download(self, file_name: str, local_path: str):
+    def download(self, file_name: str, local_path: str, overwrite: bool = False):
         """Download a file from GCS.
 
         Downloads a file from a Google Cloud Storage bucket to a local directory or path.
@@ -580,6 +580,8 @@ class Bucket:
             The local destination where the file(s) will be saved.
             - For a single file, provide the full path including the file name (e.g., "local/example.txt").
             - For a directory download, provide the base path (e.g., "local/data/").
+        overwrite : bool, optional, default is False.
+            If True, overwrites existing local files. Default is False.
 
         Raises
         ------
@@ -616,28 +618,122 @@ class Bucket:
 
         See Also
         --------
-        upload_file : To upload a file from a local path to a GCS bucket.
+        upload : To upload a file from a local path to a GCS bucket.
 
         """
         if file_name.endswith("/"):
-            blobs = self.bucket.list_blobs(prefix=file_name)
-            for blob in blobs:
-                if blob.name.endswith("/"):
-                    continue
-
-                # Remove the directory prefix to get the relative path
-                relative_path = Path(blob.name).relative_to(file_name)
-                local_file_path = local_path / relative_path
-
-                # Ensure the directory structure exists
-                local_file_path.parent.mkdir(parents=True, exist_ok=True)
-                blob.download_to_filename(local_file_path)
-                print(f"Downloaded {blob.name} to {local_file_path}.")
+            self._download_directory(file_name, local_path, overwrite)
         else:
-            # Single file download
-            blob = self.bucket.blob(file_name)
-            blob.download_to_filename(local_path)
-            print(f"File {file_name} downloaded to {local_path}.")
+            self._download_file(file_name, local_path, overwrite)
+
+    def _download_file(
+        self, bucket_path: str, local_path: Union[str, Path], overwrite: bool = False
+    ) -> None:
+        """
+        Download a single file from GCS.
+
+        Parameters
+        ----------
+        bucket_path : str
+            The source file in the GCS bucket.
+        local_path : Union[str, Path]
+            The local destination for the downloaded file.
+        overwrite : bool, optional, default is False.
+            If True, overwrites the file if it already exists.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the source file does not exist in the bucket.
+        ValueError
+            If the destination path exists and overwrite is False.
+
+        Examples
+        --------
+        >>> Bucket_ID = "test-bucket"
+        >>> PROJECT_ID = "py-project-id"
+        >>> gcs = GCS(PROJECT_ID)  # doctest: +SKIP
+        >>> my_bucket = gcs.get_bucket(Bucket_ID)   # doctest: +SKIP
+        >>> my_bucket._download_file(
+        ...     "example.txt",
+        ...     Path("local/example.txt"),
+        ...     overwrite=True
+        ... )  # doctest: +SKIP
+        """
+        local_path = Path(local_path)
+        blob = self.bucket.blob(bucket_path)
+
+        if not blob.exists():
+            raise FileNotFoundError(
+                f"The file '{bucket_path}' does not exist in the bucket."
+            )
+
+        if local_path.exists() and not overwrite:
+            raise ValueError(
+                f"The destination file '{local_path}' already exists and overwrite is set to False."
+            )
+
+        local_path.parent.mkdir(parents=True, exist_ok=True)
+        blob.download_to_filename(str(local_path))
+        print(f"File '{bucket_path}' downloaded to '{local_path}'.")
+
+    def _download_directory(
+        self, cloud_path: str, local_path: Union[str, Path], overwrite: bool = False
+    ) -> None:
+        """
+        Download a directory from GCS.
+
+        Parameters
+        ----------
+        cloud_path : str
+            The source directory in the GCS bucket.
+        local_path : Union[str, Path]
+            The local destination for the downloaded directory.
+        overwrite : bool, optional, default is False.
+            If True, overwrites existing local files.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the source directory does not exist in the bucket.
+        ValueError
+            If the destination path exists and overwrite is False.
+
+        Examples
+        --------
+        >>> Bucket_ID = "test-bucket"
+        >>> PROJECT_ID = "py-project-id"
+        >>> gcs = GCS(PROJECT_ID)  # doctest: +SKIP
+        >>> my_bucket = gcs.get_bucket(Bucket_ID)   # doctest: +SKIP
+        >>> my_bucket._download_directory(
+        ...     "data/",
+        ...     Path("local/data/"),
+        ...     overwrite=False
+        ... ) # doctest: +SKIP
+        """
+        local_path = Path(local_path)
+        blobs = list(self.bucket.list_blobs(prefix=cloud_path))
+
+        if not any(blobs):
+            raise FileNotFoundError(
+                f"The directory '{cloud_path}' does not exist in the bucket."
+            )
+
+        for blob in blobs:
+            if blob.name.endswith("/"):
+                continue  # Skip "directory" entries
+
+            relative_path = Path(blob.name).relative_to(cloud_path)
+            local_file_path = local_path / relative_path
+
+            if local_file_path.exists() and not overwrite:
+                raise ValueError(
+                    f"The destination file '{local_file_path}' already exists and overwrite is set to False."
+                )
+
+            local_file_path.parent.mkdir(parents=True, exist_ok=True)
+            blob.download_to_filename(local_file_path)
+            print(f"File '{blob.name}' downloaded to '{local_file_path}'.")
 
     def delete(self, file_path: str):
         """
