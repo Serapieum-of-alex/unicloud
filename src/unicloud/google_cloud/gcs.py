@@ -287,16 +287,40 @@ class Bucket:
         return file_names
 
     def get_file(self, blob_id) -> storage.blob.Blob:
-        """get_blob."""
+        """
+        Retrieve a blob object from the bucket.
+
+        Parameters
+        ----------
+        blob_id : str
+            The identifier of the file (blob) in the bucket.
+
+        Returns
+        -------
+        storage.blob.Blob
+            The blob object corresponding to the given `blob_id`.
+
+        Examples
+        --------
+        >>> Bucket_ID = "test-bucket"
+        >>> PROJECT_ID = "py-project-id"
+        >>> gcs = GCS(PROJECT_ID)
+        >>> my_bucket = gcs.get_bucket(Bucket_ID)
+        >>> blob = my_bucket.get_file("example.txt")  # doctest: +SKIP
+        >>> print(blob.name)  # doctest: +SKIP
+        "example.txt"
+        """
         return self.bucket.get_blob(blob_id)
 
     def file_exists(self, file_name: str) -> bool:
         """file_exists.
 
+        Check if a file exists in the bucket.
+
         Parameters
         ----------
-        file_name : [str]
-            file name
+        file_name : str
+            The name of the file to check.
 
         Returns
         -------
@@ -305,11 +329,13 @@ class Bucket:
 
         Examples
         --------
-        >>> Bucket_ID = "test-bucket"
+         >>> Bucket_ID = "test-bucket"
         >>> PROJECT_ID = "py-project-id"
         >>> gcs = GCS(PROJECT_ID)
         >>> my_bucket = gcs.get_bucket(Bucket_ID)
-        >>> print(my_bucket.file_exists("my-file.txt")) # doctest: +SKIP
+        >>> my_bucket.file_exists("example.txt")  # doctest: +SKIP
+        True
+        >>> my_bucket.file_exists("nonexistent.txt")  # doctest: +SKIP
         False
         """
         blob = self.bucket.get_blob(file_name)
@@ -358,7 +384,6 @@ class Bucket:
         -----
         - For directory uploads, the relative structure of the local directory will be preserved in the GCS bucket.
         - Ensure the `bucket_path` is valid and writable.
-
         """
         local_path = Path(local_path)
 
@@ -480,6 +505,11 @@ class Bucket:
             - For a single file, provide the file name (e.g., "example.txt").
             - For a directory, provide the path ending with '/' (e.g., "data/").
 
+        Raises
+        ------
+        ValueError
+            If the file or directory does not exist in the bucket.
+
         Examples
         --------
         >>> Bucket_ID = "test-bucket"
@@ -494,10 +524,10 @@ class Bucket:
         Delete a directory and its contents:
             >>> my_bucket.delete("data/") # doctest: +SKIP
 
-        Raises
-        ------
-        ValueError
-            If the specified path is invalid or not found in the bucket.
+         Notes
+        -----
+        - For directories, all files and subdirectories are deleted recursively.
+        - Deleting a non-existent file or directory raises a `ValueError`.
         """
         if file_path.endswith("/"):
             # Delete all files in the directory
