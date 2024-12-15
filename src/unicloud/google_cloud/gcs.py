@@ -9,7 +9,7 @@ from google.cloud import storage
 from google.oauth2 import service_account
 
 from unicloud.abstract_class import CloudStorageFactory
-from unicloud.google_cloud.utils import decode
+from unicloud.utils import decode
 
 
 class GCS(CloudStorageFactory):
