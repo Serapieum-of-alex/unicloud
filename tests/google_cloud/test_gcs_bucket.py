@@ -316,7 +316,7 @@ class TestUploadMock:
         with patch("pathlib.Path.exists", return_value=True), patch(
             "pathlib.Path.is_file", return_value=True
         ):
-            gcs_bucket.upload(local_file, bucket_path)
+            gcs_bucket.upload(local_file, bucket_path, overwrite=True)
 
         mock_bucket.blob.assert_called_once_with(bucket_path)
         mock_blob.upload_from_filename.assert_called_once_with(str(local_file))
@@ -344,7 +344,7 @@ class TestUploadMock:
 
             # Mock individual file checks and uploads
             with patch("pathlib.Path.is_file", side_effect=[False, True, True, True]):
-                gcs_bucket.upload(local_directory, bucket_path)
+                gcs_bucket.upload(local_directory, bucket_path, overwrite=True)
 
         for file in files:
             relative_path = file.relative_to(local_directory)
