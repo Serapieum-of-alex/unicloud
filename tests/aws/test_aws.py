@@ -1,4 +1,5 @@
 """This module contains tests for the S3 class in unicloud/aws.py."""
+from pathlib import Path
 
 import boto3
 import pytest
@@ -7,6 +8,21 @@ from moto import mock_aws
 from unicloud.aws.aws import S3
 
 MY_TEST_BUCKET = "test-bucket"
+MY_TEST_BUCKET = "testing-unicloud"
+AWS_ACCESS_KEY_ID = os.getenv("aws_access_key_id")
+AWS_SECRET_ACCESS_KEY = os.getenv("aws_secret_access_key")
+REGION = "eu-central-1"
+
+
+@pytest.fixture
+def boto_client() -> boto3.client:
+    return boto3.client(
+        "s3",
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        region_name=REGION,
+    )
+
 
 
 class TestS3:
@@ -60,41 +76,18 @@ class TestS3:
             assert f.read() == test_file_content
 
 
-@pytest.fixture
-def aws_credentials():
-    """Mocked AWS Credentials for moto."""
-    return {
-        "aws_access_key_id": "testing",
-        "aws_secret_access_key": "testing",
-        "region_name": "us-east-1",
-    }
-
-
-@pytest.fixture
-def s3_client(aws_credentials):
-    """Create an S3 client for testing."""
-    with mock_aws():
-        boto3.client("s3", region_name=aws_credentials["region_name"]).create_bucket(
-            Bucket="my-test-bucket"
-        )
-        yield S3(**aws_credentials)
-
-
 class TestS3E2E:
     """End-to-end tests for the S3 class."""
 
-    def test_s3_upload(self, s3_client, tmp_path):
+    s3 = S3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, REGION)
+
+    def test_s3_upload(self, test_file: Path, boto_client: boto3.client):
         """Test file upload to S3."""
-        # Create a temporary file to upload
-        file_path = tmp_path / "test_upload.txt"
-        file_path.write_text("Hello, world!")
-
-        s3_client.upload(str(file_path), f"{MY_TEST_BUCKET}/test_upload.txt")
-
+        upload_file_name = "test_upload.txt"
+        self.s3.upload(test_file, f"{MY_TEST_BUCKET}/{upload_file_name}")
         # Verify the file exists in S3
-        s3 = boto3.client("s3", region_name="us-east-1")
-        response = s3.list_objects_v2(Bucket=MY_TEST_BUCKET)
-        assert "test_upload.txt" in [obj["Key"] for obj in response["Contents"]]
+        response = boto_client.list_objects_v2(Bucket=MY_TEST_BUCKET)
+        assert upload_file_name in [obj["Key"] for obj in response["Contents"]]
 
     def test_s3_download(self, s3_client, tmp_path):
         """Test file download from S3."""
