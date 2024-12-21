@@ -75,16 +75,18 @@ class S3(CloudStorageFactory):
             raise e
         print(f"File {local_path} uploaded to {bucket_path}.")
 
-    def download(self, bucket_path: str, file_path: str):
+    def download(self, bucket_path: str, local_path: str):
         """Download a file from S3.
 
         Parameters
         ----------
         bucket_path: [str]
             The bucket_path in the format "bucket_name/object_name".
-        file_path: [str]
+        local_path: [str]
             The path to save the downloaded file.
         """
         bucket_name, object_name = bucket_path.split("/", 1)
         self.client.download_file(bucket_name, object_name, file_path)
         print(f"File {bucket_path} downloaded to {file_path}.")
+        self.client.download_file(bucket_name, object_name, local_path)
+        print(f"File {bucket_path} downloaded to {local_path}.")

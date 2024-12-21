@@ -1,4 +1,6 @@
 """This module contains tests for the S3 class in unicloud/aws.py."""
+
+import os
 from pathlib import Path
 
 import boto3
@@ -7,7 +9,6 @@ from moto import mock_aws
 
 from unicloud.aws.aws import S3
 
-MY_TEST_BUCKET = "test-bucket"
 MY_TEST_BUCKET = "testing-unicloud"
 AWS_ACCESS_KEY_ID = os.getenv("aws_access_key_id")
 AWS_SECRET_ACCESS_KEY = os.getenv("aws_secret_access_key")
@@ -80,20 +81,23 @@ class TestS3E2E:
     """End-to-end tests for the S3 class."""
 
     s3 = S3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, REGION)
+    file_name = "test_upload.txt"
 
     def test_s3_upload(self, test_file: Path, boto_client: boto3.client):
         """Test file upload to S3."""
-        upload_file_name = "test_upload.txt"
-        self.s3.upload(test_file, f"{MY_TEST_BUCKET}/{upload_file_name}")
+
+        self.s3.upload(test_file, f"{MY_TEST_BUCKET}/{self.file_name}")
         # Verify the file exists in S3
         response = boto_client.list_objects_v2(Bucket=MY_TEST_BUCKET)
-        assert upload_file_name in [obj["Key"] for obj in response["Contents"]]
+        assert self.file_name in [obj["Key"] for obj in response["Contents"]]
 
-    def test_s3_download(self, s3_client, tmp_path):
+    def test_s3_download(self, test_file_content: str):
         """Test file download from S3."""
-        # Assuming the file "test_upload.txt" already exists in S3 from the previous test
-        download_path = tmp_path / "downloaded_test.txt"
-        s3_client.download(f"{MY_TEST_BUCKET}/test_upload.txt", str(download_path))
+
+        download_path = Path("tests/data/aws-test-file.txt")
+        self.s3.download(f"{MY_TEST_BUCKET}/{self.file_name}", download_path)
 
         # Verify the file content
         assert download_path.read_text() == "Hello, world!"
+        assert download_path.read_text() == test_file_content
+        os.remove(download_path)
