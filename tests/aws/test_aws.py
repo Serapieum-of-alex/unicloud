@@ -7,7 +7,7 @@ import boto3
 import pytest
 from moto import mock_aws
 
-from unicloud.aws.aws import S3
+from unicloud.aws.aws import S3, Bucket
 
 MY_TEST_BUCKET = "testing-unicloud"
 AWS_ACCESS_KEY_ID = os.getenv("aws_access_key_id")
@@ -98,6 +98,11 @@ class TestS3E2E:
         self.s3.download(f"{MY_TEST_BUCKET}/{self.file_name}", download_path)
 
         # Verify the file content
-        assert download_path.read_text() == "Hello, world!"
         assert download_path.read_text() == test_file_content
         os.remove(download_path)
+
+    def test_get_bucket(self):
+        """Test getting a bucket object."""
+        bucket = self.s3.get_bucket(MY_TEST_BUCKET)
+        assert bucket.bucket.name == MY_TEST_BUCKET
+        assert isinstance(bucket, Bucket)

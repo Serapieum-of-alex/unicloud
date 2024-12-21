@@ -86,7 +86,29 @@ class S3(CloudStorageFactory):
             The path to save the downloaded file.
         """
         bucket_name, object_name = bucket_path.split("/", 1)
-        self.client.download_file(bucket_name, object_name, file_path)
-        print(f"File {bucket_path} downloaded to {file_path}.")
         self.client.download_file(bucket_name, object_name, local_path)
         print(f"File {bucket_path} downloaded to {local_path}.")
+
+    def get_bucket(self, bucket_name: str) -> "Bucket":
+        """Retrieve a bucket object."""
+        s3 = boto3.resource(
+            "s3",
+            aws_access_key_id=self.aws_access_key_id,
+            aws_secret_access_key=self.aws_secret_access_key,
+            region_name=self.region_name,
+        )
+        bucket = s3.Bucket(bucket_name)
+        return Bucket(bucket)
+
+
+class Bucket:
+    """S3 Bucket."""
+
+    def __init__(self, bucket):  # :boto3.resources("s3").Bucket
+        """Initialize the S3 bucket."""
+        self._bucket = bucket
+
+    @property
+    def bucket(self):
+        """bucket."""
+        return self._bucket
