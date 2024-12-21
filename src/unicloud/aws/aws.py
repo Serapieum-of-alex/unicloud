@@ -2,6 +2,8 @@
 
 from typing import Optional
 import traceback
+from pathlib import Path
+from typing import Union
 
 import boto3
 
@@ -56,7 +58,7 @@ class S3(CloudStorageFactory):
             aws_secret_access_key=self.aws_secret_access_key,
         )
 
-    def upload(self, local_path: str, bucket_path: str):
+    def upload(self, local_path: Union[str, Path], bucket_path: str):
         """Upload a file to S3.
 
         Parameters
@@ -75,7 +77,7 @@ class S3(CloudStorageFactory):
             raise e
         print(f"File {local_path} uploaded to {bucket_path}.")
 
-    def download(self, bucket_path: str, local_path: str):
+    def download(self, bucket_path: str, local_path: Union[str, Path]):
         """Download a file from S3.
 
         Parameters

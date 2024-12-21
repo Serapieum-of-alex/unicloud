@@ -10,20 +10,6 @@ from moto import mock_aws
 from unicloud.aws.aws import S3, Bucket
 
 MY_TEST_BUCKET = "testing-unicloud"
-AWS_ACCESS_KEY_ID = os.getenv("aws_access_key_id")
-AWS_SECRET_ACCESS_KEY = os.getenv("aws_secret_access_key")
-REGION = "eu-central-1"
-
-
-@pytest.fixture
-def boto_client() -> boto3.client:
-    return boto3.client(
-        "s3",
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        region_name=REGION,
-    )
-
 
 
 class TestS3:
@@ -80,29 +66,28 @@ class TestS3:
 class TestS3E2E:
     """End-to-end tests for the S3 class."""
 
-    s3 = S3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, REGION)
     file_name = "test_upload.txt"
 
-    def test_s3_upload(self, test_file: Path, boto_client: boto3.client):
+    def test_s3_upload(self, unicloud_s3, test_file: Path, boto_client: boto3.client):
         """Test file upload to S3."""
 
-        self.s3.upload(test_file, f"{MY_TEST_BUCKET}/{self.file_name}")
+        unicloud_s3.upload(test_file, f"{MY_TEST_BUCKET}/{self.file_name}")
         # Verify the file exists in S3
         response = boto_client.list_objects_v2(Bucket=MY_TEST_BUCKET)
         assert self.file_name in [obj["Key"] for obj in response["Contents"]]
 
-    def test_s3_download(self, test_file_content: str):
+    def test_s3_download(self, unicloud_s3, test_file_content: str):
         """Test file download from S3."""
 
         download_path = Path("tests/data/aws-test-file.txt")
-        self.s3.download(f"{MY_TEST_BUCKET}/{self.file_name}", download_path)
+        unicloud_s3.download(f"{MY_TEST_BUCKET}/{self.file_name}", download_path)
 
         # Verify the file content
         assert download_path.read_text() == test_file_content
         os.remove(download_path)
 
-    def test_get_bucket(self):
+    def test_get_bucket(self, unicloud_s3):
         """Test getting a bucket object."""
-        bucket = self.s3.get_bucket(MY_TEST_BUCKET)
+        bucket = unicloud_s3.get_bucket(MY_TEST_BUCKET)
         assert bucket.bucket.name == MY_TEST_BUCKET
         assert isinstance(bucket, Bucket)
