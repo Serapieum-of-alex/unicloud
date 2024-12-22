@@ -104,16 +104,39 @@ class S3(CloudStorageFactory):
 
 
 class Bucket:
-    """S3 Bucket."""
+    """
+    AWS S3 Bucket interface for file and directory operations.
+
+    This class allows interacting with an S3 bucket for uploading, downloading,
+    and deleting files and directories.
+    """
 
     def __init__(self, bucket):  # :boto3.resources("s3").Bucket
-        """Initialize the S3 bucket."""
+        """
+        Initialize the Bucket class.
+
+        Parameters
+        ----------
+        bucket : boto3.resources.factory.s3.Bucket
+            A boto3 S3 Bucket resource instance.
+
+        Examples
+        --------
+        >>> import boto3
+        >>> s3 = boto3.resource("s3")
+        >>> bucket = Bucket(s3.Bucket("my-bucket"))
+        """
         self._bucket = bucket
 
     @property
     def bucket(self):
         """bucket."""
         return self._bucket
+
+    @property
+    def name(self):
+        """Bucket name."""
+        return self.bucket.name
 
     def list_files(self, prefix: Optional[str] = None) -> List[str]:
         """List files in the bucket."""
