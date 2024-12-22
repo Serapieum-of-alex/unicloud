@@ -107,6 +107,25 @@ class TestBucketE2E:
         assert set(actual_files) == set(expected_files)
         shutil.rmtree(download_path)
 
+    def test_download_overwrite(self, test_file: Path):
+        """
+        Test downloading a file with overwrite behavior.
+        """
+        file_name = "test-download-overwrite.txt"
+        download_path = Path("tests/data/aws-downloaded-file.txt")
+
+        self.bucket.upload(test_file, file_name)
+        self.bucket.download(file_name, str(download_path))
+
+        # Overwrite = False
+        with pytest.raises(ValueError, match="File .* already exists locally."):
+            self.bucket.download(file_name, str(download_path), overwrite=False)
+
+        # Overwrite = True
+        self.bucket.download(file_name, str(download_path), overwrite=True)
+        self.bucket.delete(file_name)
+        download_path.unlink()
+
 
 class TestUploadMock:
     """
