@@ -250,7 +250,9 @@ class Bucket:
         """Download a single file."""
         if local_path.exists() and not overwrite:
             raise ValueError(f"File {local_path} already exists locally.")
+
         local_path.parent.mkdir(parents=True, exist_ok=True)
+
         self.bucket.download_file(Key=bucket_path, Filename=str(local_path))
         print(f"File {bucket_path} downloaded to {local_path}.")
 

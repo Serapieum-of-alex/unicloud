@@ -1,6 +1,7 @@
 import shutil
 from pathlib import Path
 from typing import Dict
+from unittest.mock import MagicMock, patch
 
 import boto3
 import pytest
@@ -130,3 +131,103 @@ class TestDeleteE2E:
 
         objects = self.bucket.list_files(f"{bucket_path}/")
         assert not objects
+
+
+class TestBucketMock:
+    """
+    Mock tests for the Bucket class.
+    """
+
+    def setup_method(self):
+        """
+        Setup a mocked S3 Bucket instance.
+        """
+        self.mock_bucket = MagicMock()
+        self.bucket = Bucket(self.mock_bucket)
+
+    def test_upload_file(self):
+        """
+        Test uploading a single file to the bucket using mocks.
+        """
+        local_file = Path("test.txt")
+        with patch("pathlib.Path.exists", return_value=True), patch(
+            "pathlib.Path.is_file", return_value=True
+        ):
+            self.bucket.upload(local_file, "test.txt")
+        self.mock_bucket.upload_file.assert_called_once_with(
+            Filename=str(local_file), Key="test.txt"
+        )
+
+    def test_upload_directory(self):
+        """
+        Test uploading a directory to the bucket using mocks.
+        """
+        local_dir = Path("test_dir")
+        files = [local_dir / "file1.txt", local_dir / "file2.txt"]
+
+        with patch("pathlib.Path.exists", return_value=True), patch(
+            "pathlib.Path.is_dir", return_value=True
+        ), patch(
+            "os.walk", return_value=[(str(local_dir), [], [f.name for f in files])]
+        ):
+            self.bucket.upload(local_dir, "test_dir/")
+
+        for file in files:
+            s3_path = f"test_dir/{file.name}"
+            self.mock_bucket.upload_file.assert_any_call(
+                Filename=str(file), Key=s3_path
+            )
+
+    def test_download_file(self):
+        """
+        Test downloading a single file from the bucket using mocks.
+        """
+        local_file = Path("downloaded.txt")
+        with patch("pathlib.Path.exists", return_value=False), patch(
+            "pathlib.Path.mkdir"
+        ):
+            self.bucket.download("test.txt", str(local_file))
+
+        self.mock_bucket.download_file.assert_called_once_with(
+            Key="test.txt", Filename=str(local_file)
+        )
+
+    def test_download_directory(self):
+        """
+        Test downloading a directory from the bucket using mocks.
+        """
+        local_dir = Path("downloaded_dir")
+        mock_objects = [
+            MagicMock(key="test_dir/file1.txt"),
+            MagicMock(key="test_dir/file2.txt"),
+        ]
+        self.mock_bucket.objects.filter.return_value = mock_objects
+
+        with patch("pathlib.Path.mkdir") as mock_mkdir:
+            self.bucket.download("test_dir/", str(local_dir))
+
+        for obj in mock_objects:
+            expected_path = local_dir / Path(obj.key).relative_to("test_dir/")
+            self.mock_bucket.download_file.assert_any_call(
+                Key=obj.key, Filename=str(expected_path)
+            )
+
+    def test_delete_file(self):
+        """
+        Test deleting a single file from the bucket using mocks.
+        """
+        self.bucket.delete("test.txt")
+        self.mock_bucket.Object.return_value.delete.assert_called_once()
+
+    def test_delete_directory(self):
+        """
+        Test deleting a directory from the bucket using mocks.
+        """
+        mock_objects = [
+            MagicMock(key="test_dir/file1.txt"),
+            MagicMock(key="test_dir/file2.txt"),
+        ]
+        self.mock_bucket.objects.filter.return_value = mock_objects
+        self.bucket.delete("test_dir/")
+        for obj in mock_objects:
+            obj.delete.assert_called_once()
