@@ -213,6 +213,9 @@ class Bucket:
 
     def _upload_directory(self, local_path: Path, bucket_path: str, overwrite: bool):
         """Upload a directory recursively."""
+        if local_path.is_dir() and not any(local_path.iterdir()):
+            raise ValueError(f"Directory {local_path} is empty.")
+
         for root, _, files in os.walk(local_path):
             for file in files:
                 file_path = Path(root) / file

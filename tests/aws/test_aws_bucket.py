@@ -67,6 +67,16 @@ class TestBucketE2E:
         assert file_name in objects
         self.bucket.delete(file_name)
 
+    def test_upload_empty_directory(self):
+        """
+        Test uploading an empty directory to the bucket.
+        """
+        empty_dir = Path("tests/data/empty-dir")
+        empty_dir.mkdir(parents=True, exist_ok=True)
+        with pytest.raises(ValueError, match="Directory .* is empty."):
+            self.bucket.upload(empty_dir, "empty-dir/")
+        shutil.rmtree(empty_dir)
+
     def test_download_file(self, test_file: Path, test_file_content: str):
         """
         Test downloading a single file from the bucket.
@@ -161,7 +171,7 @@ class TestUploadMock:
 
         with patch("pathlib.Path.exists", return_value=True), patch(
             "pathlib.Path.is_dir", return_value=True
-        ), patch(
+        ), patch("pathlib.Path.iterdir", return_value=files), patch(
             "os.walk", return_value=[(str(local_dir), [], [f.name for f in files])]
         ):
             self.bucket.upload(local_dir, "test_dir/")
