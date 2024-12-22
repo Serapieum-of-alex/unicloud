@@ -202,6 +202,7 @@ class TestDeleteE2E:
     """
     End-to-End tests for the Bucket class delete method.
     """
+
     @pytest.fixture
     def gcs_bucket(self) -> Bucket:
         return GCS(PROJECT_ID).get_bucket(MY_TEST_BUCKET)

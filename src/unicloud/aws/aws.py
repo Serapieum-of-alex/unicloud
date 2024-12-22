@@ -1,6 +1,5 @@
 """S3 Cloud Storage."""
 
-from typing import Optional
 import os
 import traceback
 from pathlib import Path
@@ -122,6 +121,7 @@ class Bucket:
             prefix = ""
 
         return [obj.key for obj in self.bucket.objects.filter(Prefix=prefix)]
+
     def upload(
         self, local_path: Union[str, Path], bucket_path: str, overwrite: bool = False
     ):
@@ -151,10 +151,10 @@ class Bucket:
         Examples
         --------
         Upload a single file:
-            >>> bucket.upload('local/file.txt', 'bucket/file.txt')
+            >>> bucket.upload('local/file.txt', 'bucket/file.txt')  # doctest: +SKIP
 
         Upload a directory:
-            >>> bucket.upload('local/dir', 'bucket/dir')
+            >>> bucket.upload('local/dir', 'bucket/dir')  # doctest: +SKIP
         """
         local_path = Path(local_path)
         if not local_path.exists():
@@ -185,6 +185,61 @@ class Bucket:
                 s3_path = f"{bucket_path.rstrip('/')}/{relative_path.as_posix()}"
                 self._upload_file(file_path, s3_path, overwrite)
 
+    def download(
+        self, bucket_path: str, local_path: Union[str, Path], overwrite: bool = False
+    ):
+        """
+        Download a file or directory from the S3 bucket.
+
+        Parameters
+        ----------
+        bucket_path : str
+            Path in the bucket to download.
+        local_path : Union[str, Path]
+            Local path to save the downloaded file or directory.
+        overwrite : bool, optional
+            Whether to overwrite existing local files. Default is False.
+
+        Raises
+        ------
+        ValueError
+            If the local path exists and overwrite is False.
+
+        Notes
+        -----
+        - If bucket_path is a directory, downloads all files within it recursively.
+
+        Examples
+        --------
+        Download a single file:
+            >>> bucket.download('bucket/file.txt', 'local/file.txt') # doctest: +SKIP
+
+        Download a directory:
+            >>> bucket.download('bucket/dir/', 'local/dir/')  # doctest: +SKIP
+        """
+        local_path = Path(local_path)
+        if bucket_path.endswith("/"):
+            self._download_directory(bucket_path, local_path, overwrite)
+        else:
+            self._download_file(bucket_path, local_path, overwrite)
+
+    def _download_file(self, bucket_path: str, local_path: Path, overwrite: bool):
+        """Download a single file."""
+        if local_path.exists() and not overwrite:
+            raise ValueError(f"File {local_path} already exists locally.")
+        local_path.parent.mkdir(parents=True, exist_ok=True)
+        self.bucket.download_file(Key=bucket_path, Filename=str(local_path))
+        print(f"File {bucket_path} downloaded to {local_path}.")
+
+    def _download_directory(self, bucket_path: str, local_path: Path, overwrite: bool):
+        """Download a directory recursively."""
+        local_path.mkdir(parents=True, exist_ok=True)
+        for obj in self.bucket.objects.filter(Prefix=bucket_path):
+            if obj.key.endswith("/"):
+                continue
+            relative_path = Path(obj.key).relative_to(bucket_path)
+            self._download_file(obj.key, local_path / relative_path, overwrite)
+
     def delete(self, bucket_path: str):
         """
         Delete a file or directory from the S3 bucket.
@@ -206,10 +261,10 @@ class Bucket:
         Examples
         --------
         Delete a single file:
-            >>> bucket.delete('bucket/file.txt')
+            >>> bucket.delete('bucket/file.txt')  # doctest: +SKIP
 
         Delete a directory:
-            >>> bucket.delete('bucket/dir/')
+            >>> bucket.delete('bucket/dir/')  # doctest: +SKIP
         """
         if bucket_path.endswith("/"):
             self._delete_directory(bucket_path)
@@ -227,3 +282,20 @@ class Bucket:
         for obj in self.bucket.objects.filter(Prefix=bucket_path):
             obj.delete()
             print(f"Deleted {obj.key}.")
+
+    def file_exists(self, bucket_path: str) -> bool:
+        """
+        Check if a file exists in the bucket.
+
+        Parameters
+        ----------
+        bucket_path : str
+            Path in the bucket to check.
+
+        Returns
+        -------
+        bool
+            True if the file exists, False otherwise.
+        """
+        objs = list(self.bucket.objects.filter(Prefix=bucket_path))
+        return len(objs) > 0 and objs[0].key == bucket_path
