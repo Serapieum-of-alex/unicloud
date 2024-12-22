@@ -108,7 +108,7 @@ class TestBucketE2E:
         shutil.rmtree(download_path)
 
 
-class TestBucketMock:
+class TestUploadMock:
     """
     Mock tests for the Bucket class.
     """
@@ -152,6 +152,15 @@ class TestBucketMock:
             self.mock_bucket.upload_file.assert_any_call(
                 Filename=str(file), Key=s3_path
             )
+
+
+class TestDownloadMock:
+    def setup_method(self):
+        """
+        Setup a mocked S3 Bucket instance.
+        """
+        self.mock_bucket = MagicMock()
+        self.bucket = Bucket(self.mock_bucket)
 
     def test_download_file(self):
         """
