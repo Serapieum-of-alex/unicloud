@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 from typing import Dict
 
@@ -47,6 +48,47 @@ class TestBucketE2E:
         expected_files = upload_test_data["expected_files"]
         assert set(objects) & expected_files == expected_files
         self.bucket.delete(f"{bucket_path}/")
+
+    def test_download_file(self, test_file: Path, test_file_content: str):
+        """
+        Test downloading a single file from the bucket.
+        """
+        file_name = "test-download-file.txt"
+        self.bucket.upload(test_file, file_name, overwrite=True)
+        download_path = Path("tests/data/aws-downloaded-file.txt")
+        self.bucket.download(file_name, str(download_path))
+        assert download_path.exists()
+        assert download_path.read_text() == test_file_content
+        self.bucket.delete(file_name)
+        download_path.unlink()
+
+    def test_download_directory(self, upload_test_data: Dict[str, Path]):
+        """
+        Test downloading a directory from the bucket.
+        """
+        local_dir = upload_test_data["local_dir"]
+        bucket_path = "test-download-dir"
+        expected_files = upload_test_data["expected_files"]
+
+        self.bucket.upload(local_dir, f"{bucket_path}/", overwrite=True)
+
+        download_path = Path("tests/data/aws-downloaded-dir")
+        self.bucket.download(f"{bucket_path}/", str(download_path))
+
+        expected_files = [
+            file.replace("upload-dir", download_path.name) for file in expected_files
+        ]
+        assert download_path.exists()
+        assert download_path.is_dir()
+
+        actual_files = [
+            str(file.relative_to(download_path.parent)).replace("\\", "/")
+            for file in download_path.rglob("*")
+            if file.is_file()
+        ]
+        assert set(actual_files) == set(expected_files)
+        shutil.rmtree(download_path)
+
 
 class TestDeleteE2E:
     """
