@@ -298,9 +298,11 @@ class Bucket:
 
     def _delete_file(self, bucket_path: str):
         """Delete a single file."""
-        obj = self.bucket.Object(bucket_path)
-        obj.delete()
-        print(f"Deleted {bucket_path}.")
+        objects = list(self.bucket.objects.filter(Prefix=bucket_path))
+        if not objects or objects[0].key != bucket_path:
+            raise ValueError(f"File {bucket_path} not found in the bucket.")
+        self.bucket.Object(bucket_path).delete()
+        print(f"Deleted: {bucket_path}")
 
     def _delete_directory(self, bucket_path: str):
         """Delete a directory recursively."""

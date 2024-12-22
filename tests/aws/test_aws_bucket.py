@@ -159,6 +159,16 @@ class TestDeleteE2E:
         ):
             self.bucket.delete(empty_dir)
 
+    def test_delete_nonexistent_file(self):
+        """
+        Test attempting to delete a nonexistent file in the bucket.
+        """
+        nonexistent_file = "nonexistent-file.txt"
+        with pytest.raises(
+            ValueError, match=f"File {nonexistent_file} not found in the bucket."
+        ):
+            self.bucket.delete(nonexistent_file)
+
 
 class TestBucketMock:
     """
@@ -243,6 +253,9 @@ class TestBucketMock:
         """
         Test deleting a single file from the bucket using mocks.
         """
+        object_mock = MagicMock()
+        object_mock.key = "test.txt"
+        self.mock_bucket.objects.filter.return_value = [object_mock]
         self.bucket.delete("test.txt")
         self.mock_bucket.Object.return_value.delete.assert_called_once()
 
@@ -268,3 +281,18 @@ class TestBucketMock:
             ValueError, match="No files found in the directory: empty-dir/"
         ):
             self.bucket.delete("empty-dir/")
+
+    def test_delete_nonexistent_file_mock(self):
+        """
+        Test deleting a nonexistent file using mocks.
+        """
+        self.mock_bucket.objects.filter.return_value = []
+
+        with pytest.raises(
+            ValueError, match="File nonexistent-file.txt not found in the bucket."
+        ):
+            self.bucket.delete("nonexistent-file.txt")
+
+        self.mock_bucket.objects.filter.assert_called_once_with(
+            Prefix="nonexistent-file.txt"
+        )
