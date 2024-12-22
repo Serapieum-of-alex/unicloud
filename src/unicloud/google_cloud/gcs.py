@@ -269,11 +269,16 @@ class Bucket:
 
     def __str__(self):
         """__str__."""
-        return f"Bucket: {self.bucket.name}"
+        return f"Bucket: {self.name}"
 
     def __repr__(self):
         """__repr__."""
-        return f"Bucket: {self.bucket.name}"
+        return f"Bucket: {self.name}"
+
+    @property
+    def name(self):
+        """name."""
+        return self.bucket.name
 
     @property
     def bucket(self) -> storage.bucket.Bucket:
