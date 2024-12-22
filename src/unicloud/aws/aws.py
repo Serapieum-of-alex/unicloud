@@ -122,6 +122,69 @@ class Bucket:
             prefix = ""
 
         return [obj.key for obj in self.bucket.objects.filter(Prefix=prefix)]
+    def upload(
+        self, local_path: Union[str, Path], bucket_path: str, overwrite: bool = False
+    ):
+        """
+        Upload a file or directory to the S3 bucket.
+
+        Parameters
+        ----------
+        local_path : Union[str, Path]
+            Path to the local file or directory to upload.
+        bucket_path : str
+            Path in the bucket to upload to.
+        overwrite : bool, optional
+            Whether to overwrite existing files. Default is False.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the local path does not exist.
+        ValueError
+            If attempting to overwrite an existing file and overwrite is False.
+
+        Notes
+        -----
+        - Uploads a single file or all files within a directory (including subdirectories).
+
+        Examples
+        --------
+        Upload a single file:
+            >>> bucket.upload('local/file.txt', 'bucket/file.txt')
+
+        Upload a directory:
+            >>> bucket.upload('local/dir', 'bucket/dir')
+        """
+        local_path = Path(local_path)
+        if not local_path.exists():
+            raise FileNotFoundError(f"Path {local_path} does not exist.")
+
+        if local_path.is_file():
+            self._upload_file(local_path, bucket_path, overwrite)
+        elif local_path.is_dir():
+            self._upload_directory(local_path, bucket_path, overwrite)
+        else:
+            raise ValueError(
+                f"Invalid path type: {local_path} is neither a file nor a directory."
+            )
+
+    def _upload_file(self, local_path: Path, bucket_path: str, overwrite: bool):
+        """Upload a single file."""
+        if not overwrite and self.file_exists(bucket_path):
+            raise ValueError(f"File {bucket_path} already exists in the bucket.")
+        self.bucket.upload_file(Filename=str(local_path), Key=bucket_path)
+        print(f"File {local_path} uploaded to {bucket_path}.")
+
+    def _upload_directory(self, local_path: Path, bucket_path: str, overwrite: bool):
+        """Upload a directory recursively."""
+        for root, _, files in os.walk(local_path):
+            for file in files:
+                file_path = Path(root) / file
+                relative_path = file_path.relative_to(local_path)
+                s3_path = f"{bucket_path.rstrip('/')}/{relative_path.as_posix()}"
+                self._upload_file(file_path, s3_path, overwrite)
+
     def delete(self, bucket_path: str):
         """
         Delete a file or directory from the S3 bucket.

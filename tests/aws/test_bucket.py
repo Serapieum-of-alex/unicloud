@@ -7,6 +7,47 @@ import pytest
 from unicloud.aws.aws import Bucket
 
 
+class TestBucketE2E:
+    """
+    End-to-End tests for the Bucket class.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup(self, s3_bucket_name, aws_access_key_id, aws_secret_access_key, region):
+        """
+        Setup a mock S3 bucket and temporary directory for testing.
+        """
+        s3 = boto3.resource(
+            "s3",
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
+            region_name=region,
+        )
+        self.bucket = Bucket(s3.Bucket(s3_bucket_name))
+
+    def test_upload_file(self, test_file: Path):
+        """
+        Test uploading a single file to the bucket.
+        """
+        file_name = "test-upload-file.txt"
+        self.bucket.upload(test_file, file_name)
+        objects = [obj.key for obj in self.bucket.bucket.objects.all()]
+        assert file_name in objects
+        self.bucket.delete(file_name)
+
+    def test_upload_directory(self, upload_test_data: Dict[str, Path]):
+        """
+        Test uploading a directory to the bucket.
+        """
+        local_dir = upload_test_data["local_dir"]
+        bucket_path = upload_test_data["bucket_path"]
+
+        self.bucket.upload(local_dir, f"{bucket_path}/")
+        objects = [obj.key for obj in self.bucket.bucket.objects.all()]
+        expected_files = upload_test_data["expected_files"]
+        assert set(objects) & expected_files == expected_files
+        self.bucket.delete(f"{bucket_path}/")
+
 class TestDeleteE2E:
     """
     End-to-End tests for the Bucket class delete method.
