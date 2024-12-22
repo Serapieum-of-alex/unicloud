@@ -276,6 +276,9 @@ class Bucket:
 
     def _download_directory(self, bucket_path: str, local_path: Path, overwrite: bool):
         """Download a directory recursively."""
+        if not any(self.list_files(bucket_path)):
+            raise ValueError(f"Directory {bucket_path} is empty.")
+
         local_path.mkdir(parents=True, exist_ok=True)
         for obj in self.bucket.objects.filter(Prefix=bucket_path):
             if obj.key.endswith("/"):

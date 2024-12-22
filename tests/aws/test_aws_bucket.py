@@ -136,6 +136,13 @@ class TestBucketE2E:
         self.bucket.delete(file_name)
         download_path.unlink()
 
+    def test_download_empty_directory(self):
+        """
+        Test downloading an empty directory from the bucket.
+        """
+        with pytest.raises(ValueError, match="Directory .* is empty."):
+            self.bucket.download("empty-dir/", "tests/data/empty-dir/")
+
 
 class TestUploadMock:
     """
