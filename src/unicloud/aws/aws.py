@@ -139,7 +139,19 @@ class Bucket:
         return self.bucket.name
 
     def list_files(self, prefix: Optional[str] = None) -> List[str]:
-        """List files in the bucket."""
+        """
+        List files in the bucket with a specific prefix.
+
+        Parameters
+        ----------
+        prefix : str, optional, default is None
+            The prefix to filter the files (default is "", which lists all files).
+
+        Returns
+        -------
+        list of str
+            List of file keys matching the prefix.
+        """
         if prefix is None:
             prefix = ""
 
