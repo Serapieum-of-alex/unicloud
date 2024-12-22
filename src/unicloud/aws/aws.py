@@ -1,9 +1,10 @@
 """S3 Cloud Storage."""
 
 from typing import Optional
+import os
 import traceback
 from pathlib import Path
-from typing import Union
+from typing import List, Optional, Union
 
 import boto3
 
@@ -114,3 +115,52 @@ class Bucket:
     def bucket(self):
         """bucket."""
         return self._bucket
+
+    def list_files(self, prefix: Optional[str] = None) -> List[str]:
+        """List files in the bucket."""
+        if prefix is None:
+            prefix = ""
+
+        return [obj.key for obj in self.bucket.objects.filter(Prefix=prefix)]
+    def delete(self, bucket_path: str):
+        """
+        Delete a file or directory from the S3 bucket.
+
+        Parameters
+        ----------
+        bucket_path : str
+            Path in the bucket to delete.
+
+        Raises
+        ------
+        ValueError
+            If the file or directory does not exist.
+
+        Notes
+        -----
+        - Deletes a single file or all files within a directory.
+
+        Examples
+        --------
+        Delete a single file:
+            >>> bucket.delete('bucket/file.txt')
+
+        Delete a directory:
+            >>> bucket.delete('bucket/dir/')
+        """
+        if bucket_path.endswith("/"):
+            self._delete_directory(bucket_path)
+        else:
+            self._delete_file(bucket_path)
+
+    def _delete_file(self, bucket_path: str):
+        """Delete a single file."""
+        obj = self.bucket.Object(bucket_path)
+        obj.delete()
+        print(f"Deleted {bucket_path}.")
+
+    def _delete_directory(self, bucket_path: str):
+        """Delete a directory recursively."""
+        for obj in self.bucket.objects.filter(Prefix=bucket_path):
+            obj.delete()
+            print(f"Deleted {obj.key}.")
