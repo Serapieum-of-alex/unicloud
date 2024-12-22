@@ -178,6 +178,9 @@ class Bucket:
             If the local path does not exist.
         ValueError
             If attempting to overwrite an existing file and overwrite is False.
+        ValueError
+            If the local path is a directory and it is empty.
+
 
         Notes
         -----
