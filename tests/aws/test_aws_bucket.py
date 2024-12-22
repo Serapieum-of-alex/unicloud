@@ -149,6 +149,16 @@ class TestDeleteE2E:
         objects = self.bucket.list_files(f"{bucket_path}/")
         assert not objects
 
+    def test_delete_empty_directory(self):
+        """
+        Test attempting to delete an empty directory in the bucket.
+        """
+        empty_dir = "empty-dir/"
+        with pytest.raises(
+            ValueError, match=f"No files found in the directory: {empty_dir}"
+        ):
+            self.bucket.delete(empty_dir)
+
 
 class TestBucketMock:
     """
@@ -248,3 +258,13 @@ class TestBucketMock:
         self.bucket.delete("test_dir/")
         for obj in mock_objects:
             obj.delete.assert_called_once()
+
+    def test_delete_empty_directory_mock(self):
+        """
+        Test deleting an empty directory using mocks.
+        """
+        self.mock_bucket.objects.filter.return_value = []
+        with pytest.raises(
+            ValueError, match="No files found in the directory: empty-dir/"
+        ):
+            self.bucket.delete("empty-dir/")

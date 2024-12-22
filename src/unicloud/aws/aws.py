@@ -304,7 +304,11 @@ class Bucket:
 
     def _delete_directory(self, bucket_path: str):
         """Delete a directory recursively."""
-        for obj in self.bucket.objects.filter(Prefix=bucket_path):
+        objects = list(self.bucket.objects.filter(Prefix=bucket_path))
+        if not objects:
+            raise ValueError(f"No files found in the directory: {bucket_path}")
+
+        for obj in objects:
             obj.delete()
             print(f"Deleted {obj.key}.")
 
