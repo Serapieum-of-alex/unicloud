@@ -50,6 +50,23 @@ class TestBucketE2E:
         assert set(objects) & expected_files == expected_files
         self.bucket.delete(f"{bucket_path}/")
 
+    def test_upload_overwrite(self, test_file: Path):
+        """
+        Test uploading a file with overwrite behavior.
+        """
+        file_name = "test-upload-overwrite.txt"
+        self.bucket.upload(test_file, file_name)
+
+        # Overwrite = False
+        with pytest.raises(ValueError, match="File .* already exists."):
+            self.bucket.upload(test_file, file_name, overwrite=False)
+
+        # Overwrite = True
+        self.bucket.upload(test_file, file_name, overwrite=True)
+        objects = [obj.key for obj in self.bucket.bucket.objects.all()]
+        assert file_name in objects
+        self.bucket.delete(file_name)
+
     def test_download_file(self, test_file: Path, test_file_content: str):
         """
         Test downloading a single file from the bucket.
