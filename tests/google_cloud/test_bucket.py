@@ -38,6 +38,9 @@ class TestGCSBucketE2E:
         assert not self.bucket.file_exists("non_existent_file.geojson")
 
     def test_upload_file(self, test_file: Path):
+        """
+        Test uploading a single file to the bucket.
+        """
         bucket_path = f"test-upload-gcs-bucket-{test_file.name}"
         self.bucket.upload(test_file, bucket_path)
         assert any(blob.name == bucket_path for blob in self.bucket.bucket.list_blobs())
@@ -196,7 +199,9 @@ class TestListFilesMock:
 
 
 class TestDeleteE2E:
-
+    """
+    End-to-End tests for the Bucket class delete method.
+    """
     @pytest.fixture
     def gcs_bucket(self) -> Bucket:
         return GCS(PROJECT_ID).get_bucket(MY_TEST_BUCKET)
