@@ -137,6 +137,14 @@ class Bucket(AbstractBucket):
         """
         self._bucket = bucket
 
+    def __str__(self):
+        """__str__."""
+        return f"Bucket: {self.name}"
+
+    def __repr__(self):
+        """__repr__."""
+        return f"Bucket: {self.name}"
+
     @property
     def bucket(self):
         """bucket."""

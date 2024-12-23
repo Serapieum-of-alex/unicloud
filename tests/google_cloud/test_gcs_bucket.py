@@ -249,6 +249,23 @@ class TestDeleteE2E:
             gcs_bucket.delete(directory)
 
 
+class TestPropertiesMock:
+
+    def setup_method(self):
+        self.mock_bucket = MagicMock()
+        self.mock_bucket.name = "test_bucket"
+        self.gcs_bucket = Bucket(self.mock_bucket)
+
+    def test_name_property(self):
+        assert self.gcs_bucket.name == "test_bucket"
+
+    def test__str__(self):
+        assert str(self.gcs_bucket) == "Bucket: test_bucket"
+
+    def test__repr__(self):
+        assert str(self.gcs_bucket.__repr__()) == "Bucket: test_bucket"
+
+
 class TestDownloadMock:
 
     @pytest.mark.mock
