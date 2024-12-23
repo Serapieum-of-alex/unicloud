@@ -245,6 +245,8 @@ class Bucket:
         ------
         ValueError
             If the local path exists and overwrite is False.
+        ValueError
+            If the file or directory does not exist in the bucket.
 
         Notes
         -----

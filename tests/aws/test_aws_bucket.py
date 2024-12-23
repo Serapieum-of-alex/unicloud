@@ -189,6 +189,17 @@ class TestUploadMock:
                 Filename=str(file), Key=s3_path
             )
 
+    def test_upload_empty_directory_mock(self):
+        """
+        Test uploading an empty directory to the bucket using mocks.
+        """
+        empty_dir = Path("test-empty-dir")
+        with patch("pathlib.Path.exists", return_value=True), patch(
+            "pathlib.Path.is_dir", return_value=True
+        ), patch("pathlib.Path.iterdir", return_value=[]):
+            with pytest.raises(ValueError, match="Directory .* is empty."):
+                self.bucket.upload(empty_dir, "empty-dir/")
+
 
 class TestDownloadMock:
     def setup_method(self):
@@ -231,6 +242,16 @@ class TestDownloadMock:
             self.mock_bucket.download_file.assert_any_call(
                 Key=obj.key, Filename=str(expected_path)
             )
+
+    def test_download_empty_directory_mock(self):
+        """
+        Test downloading an empty directory using mocks.
+        """
+        with patch("pathlib.Path.mkdir"), patch(
+            "unicloud.aws.aws.Bucket.list_files", return_value=[]
+        ):
+            with pytest.raises(ValueError, match="Directory .* is empty."):
+                self.bucket.download("empty-dir/", "local-empty-dir/")
 
 
 class TestDeleteE2E:
