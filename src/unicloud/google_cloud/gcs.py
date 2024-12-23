@@ -533,6 +533,8 @@ class Bucket:
             If the `local_path` does not exist or is not a directory.
         ValueError
             If any destination file exists in the bucket and `overwrite` is False.
+        ValueError
+            If the directory is empty.
 
         Examples
         --------
@@ -558,6 +560,9 @@ class Bucket:
             ...     print(e)
             "The file 'bucket/folder/subdir/file.txt' already exists in the bucket and overwrite is set to False."
         """
+        if local_path.is_dir() and not any(local_path.iterdir()):
+            raise ValueError(f"Directory {local_path} is empty.")
+
         for file in local_path.rglob("*"):
             if file.is_file():
                 relative_path = file.relative_to(local_path)

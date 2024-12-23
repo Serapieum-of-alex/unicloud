@@ -345,9 +345,9 @@ class TestUploadMock:
         with (
             patch("pathlib.Path.exists", return_value=True),
             patch("pathlib.Path.is_dir", return_value=True),
+            patch("pathlib.Path.iterdir", return_value=files),
             patch("pathlib.Path.rglob", return_value=files),
         ):
-
             # Mock individual file checks and uploads
             with patch("pathlib.Path.is_file", side_effect=[False, True, True, True]):
                 gcs_bucket.upload(local_directory, bucket_path, overwrite=True)
