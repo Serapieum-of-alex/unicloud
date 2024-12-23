@@ -8,7 +8,7 @@ from typing import List, Optional, Union
 from google.cloud import storage
 from google.oauth2 import service_account
 
-from unicloud.abstract_class import CloudStorageFactory
+from unicloud.abstract_class import AbstractBucket, CloudStorageFactory
 from unicloud.utils import decode
 
 
@@ -260,7 +260,7 @@ class GCS(CloudStorageFactory):
         return Bucket(bucket)
 
 
-class Bucket:
+class Bucket(AbstractBucket):
     """GCSBucket."""
 
     def __init__(self, bucket: storage.bucket.Bucket):
@@ -571,7 +571,7 @@ class Bucket:
                 )
                 self._upload_file(file, bucket_file_path, overwrite)
 
-    def download(self, file_name: str, local_path: str, overwrite: bool = False):
+    def download(self, bucket_path: str, local_path: str, overwrite: bool = False):
         """Download a file from GCS.
 
         Downloads a file from a Google Cloud Storage bucket to a local directory or path.
@@ -582,7 +582,7 @@ class Bucket:
 
         Parameters
         ----------
-        file_name : str
+        bucket_path : str
             The name of the file or directory to download from the GCS bucket.
             - For a single file, provide its name (e.g., "example.txt").
             - For a directory, provide its name ending with a '/' (e.g., "data/").
@@ -631,10 +631,10 @@ class Bucket:
         upload : To upload a file from a local path to a GCS bucket.
 
         """
-        if file_name.endswith("/"):
-            self._download_directory(file_name, local_path, overwrite)
+        if bucket_path.endswith("/"):
+            self._download_directory(bucket_path, local_path, overwrite)
         else:
-            self._download_file(file_name, local_path, overwrite)
+            self._download_file(bucket_path, local_path, overwrite)
 
     def _download_file(
         self, bucket_path: str, local_path: Union[str, Path], overwrite: bool = False
@@ -745,7 +745,7 @@ class Bucket:
             blob.download_to_filename(local_file_path)
             print(f"File '{blob.name}' downloaded to '{local_file_path}'.")
 
-    def delete(self, file_path: str):
+    def delete(self, bucket_path: str):
         """
         Delete a file or all files in a directory from the GCS bucket.
 
@@ -755,7 +755,7 @@ class Bucket:
 
         Parameters
         ----------
-        file_path : str
+        bucket_path : str
             The path to the file or directory in the GCS bucket.
             - For a single file, provide the file name (e.g., "example.txt").
             - For a directory, provide the path ending with '/' (e.g., "data/").
@@ -784,9 +784,9 @@ class Bucket:
         - For directories, all files and subdirectories are deleted recursively.
         - Deleting a non-existent file or directory raises a `ValueError`.
         """
-        if file_path.endswith("/"):
+        if bucket_path.endswith("/"):
             # Delete all files in the directory
-            blobs = self.bucket.list_blobs(prefix=file_path)
+            blobs = self.bucket.list_blobs(prefix=bucket_path)
             deleted_files = []
             for blob in blobs:
                 blob.delete()
@@ -794,12 +794,12 @@ class Bucket:
                 print(f"Deleted file: {blob.name}")
 
             if not deleted_files:
-                raise ValueError(f"No files found in the directory: {file_path}")
+                raise ValueError(f"No files found in the directory: {bucket_path}")
         else:
             # Delete a single file
-            blob = self.bucket.blob(file_path)
+            blob = self.bucket.blob(bucket_path)
             if blob.exists():
                 blob.delete()
-                print(f"Blob {file_path} deleted.")
+                print(f"Blob {bucket_path} deleted.")
             else:
-                raise ValueError(f"File {file_path} not found in the bucket.")
+                raise ValueError(f"File {bucket_path} not found in the bucket.")

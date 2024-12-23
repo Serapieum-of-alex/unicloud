@@ -1,6 +1,8 @@
 """This module contains the abstract class for cloud storage factory."""
 
 from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import Union
 
 
 class CloudStorageFactory(ABC):
@@ -36,17 +38,24 @@ class AbstractBucket(ABC):
     """Abstract class for cloud storage bucket."""
 
     @abstractmethod
-    def upload(self):
+    def upload(
+        self,
+        local_path: Union[str, Path],
+        bucket_path: Union[str, Path],
+        overwrite: bool = False,
+    ):
         """Upload a file/directory to the bucket."""
         pass
 
     @abstractmethod
-    def download(self):
+    def download(
+        self, bucket_path: str, local_path: Union[str, Path], overwrite: bool = False
+    ):
         """Download a file/directory from the bucket."""
         pass
 
     @abstractmethod
-    def delete(self):
+    def delete(self, bucket_path: str):
         """Delete a file/directory from the bucket."""
         pass
 
