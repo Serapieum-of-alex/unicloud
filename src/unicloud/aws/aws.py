@@ -7,7 +7,7 @@ from typing import List, Optional, Union
 
 import boto3
 
-from unicloud.abstract_class import CloudStorageFactory
+from unicloud.abstract_class import AbstractBucket, CloudStorageFactory
 
 
 class S3(CloudStorageFactory):
@@ -103,7 +103,7 @@ class S3(CloudStorageFactory):
         return Bucket(bucket)
 
 
-class Bucket:
+class Bucket(AbstractBucket):
     """
     AWS S3 Bucket interface for file and directory operations.
 

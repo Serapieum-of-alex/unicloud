@@ -30,3 +30,38 @@ class CloudStorageFactory(ABC):
         - file_path: The path to save the downloaded file.
         """
         pass
+
+
+class AbstractBucket(ABC):
+    """Abstract class for cloud storage bucket."""
+
+    @abstractmethod
+    def upload(self):
+        """Upload a file/directory to the bucket."""
+        pass
+
+    @abstractmethod
+    def download(self):
+        """Download a file/directory from the bucket."""
+        pass
+
+    @abstractmethod
+    def delete(self):
+        """Delete a file/directory from the bucket."""
+        pass
+
+    @abstractmethod
+    def list_files(self):
+        """List the files/directory in the bucket."""
+        pass
+
+    @abstractmethod
+    def file_exists(self):
+        """Check if a file/directory exists in the bucket."""
+        pass
+
+    @property
+    @abstractmethod
+    def name(self):
+        """Get the name of the bucket."""
+        pass
