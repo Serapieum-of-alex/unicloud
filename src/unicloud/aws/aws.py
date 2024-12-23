@@ -122,9 +122,18 @@ class Bucket:
 
         Examples
         --------
-        >>> import boto3
-        >>> s3 = boto3.resource("s3")
-        >>> bucket = Bucket(s3.Bucket("my-bucket"))
+        - Initialize the Bucket class with a boto3 S3 Bucket resource instance:
+
+            >>> import boto3
+            >>> s3 = boto3.resource("s3")
+            >>> bucket = Bucket(s3.Bucket("my-bucket")) # doctest: +SKIP
+
+        - Get the Bucket object from an S3 client:
+            >>> AWS_ACCESS_KEY_ID = "your-access key"
+            >>> AWS_SECRET_ACCESS_KEY = "your-secret-key"
+            >>> REGION = "us-east-1"
+            >>> s3 = S3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, REGION) # doctest: +SKIP
+            >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
         """
         self._bucket = bucket
 
@@ -144,13 +153,26 @@ class Bucket:
 
         Parameters
         ----------
-        prefix : str, optional, default is None
-            The prefix to filter the files (default is "", which lists all files).
+        prefix : str, optional, default=None
+            The prefix to filter files (e.g., 'folder/' to list files under 'folder/').
 
         Returns
         -------
-        list of str
-            List of file keys matching the prefix.
+        List[str]
+            A list of file keys matching the prefix.
+
+
+        Examples
+        --------
+        Create the S3 client and bucket:
+            >>> s3 = S3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, REGION) # doctest: +SKIP
+            >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
+
+        List all files in the bucket:
+            >>> bucket.list_files()  # doctest: +SKIP
+
+        List files with a specific prefix:
+            >>> bucket.list_files(prefix="folder/")  # doctest: +SKIP
         """
         if prefix is None:
             prefix = ""
@@ -168,31 +190,33 @@ class Bucket:
         local_path : Union[str, Path]
             Path to the local file or directory to upload.
         bucket_path : str
-            Path in the bucket to upload to.
-        overwrite : bool, optional
-            Whether to overwrite existing files. Default is False.
+            The destination path in the bucket.
+        overwrite : bool, optional, default=False
+            Whether to overwrite existing files in the bucket.
 
         Raises
         ------
         FileNotFoundError
-            If the local path does not exist.
+            If the local file or directory does not exist.
         ValueError
-            If attempting to overwrite an existing file and overwrite is False.
-        ValueError
+            If attempting to overwrite an existing file when `overwrite` is False.
             If the local path is a directory and it is empty.
-
 
         Notes
         -----
-        - Uploads a single file or all files within a directory (including subdirectories).
+        - Uploads a single file or recursively uploads a directory and its contents.
 
         Examples
         --------
+        Create the S3 client and bucket:
+            >>> s3 = S3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, REGION) # doctest: +SKIP
+            >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
+
         Upload a single file:
-            >>> bucket.upload('local/file.txt', 'bucket/file.txt')  # doctest: +SKIP
+            >>> bucket.upload("local/file.txt", "bucket/file.txt", overwrite=False)  # doctest: +SKIP
 
         Upload a directory:
-            >>> bucket.upload('local/dir', 'bucket/dir')  # doctest: +SKIP
+            >>> bucket.upload("local/dir", "bucket/dir", overwrite=True)  # doctest: +SKIP
         """
         local_path = Path(local_path)
         if not local_path.exists():
@@ -237,28 +261,31 @@ class Bucket:
         bucket_path : str
             Path in the bucket to download.
         local_path : Union[str, Path]
-            Local path to save the downloaded file or directory.
-        overwrite : bool, optional
-            Whether to overwrite existing local files. Default is False.
+            Local destination path for the downloaded file or directory.
+        overwrite : bool, optional, default=False
+            Whether to overwrite existing local files.
 
         Raises
         ------
         ValueError
-            If the local path exists and overwrite is False.
-        ValueError
+            If the local path exists and `overwrite` is False.
             If the file or directory does not exist in the bucket.
 
         Notes
         -----
-        - If bucket_path is a directory, downloads all files within it recursively.
+        - Downloads a single file or recursively downloads all files in a directory.
 
         Examples
         --------
+        Create the S3 client and bucket:
+            >>> s3 = S3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, REGION) # doctest: +SKIP
+            >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
+
         Download a single file:
-            >>> bucket.download('bucket/file.txt', 'local/file.txt') # doctest: +SKIP
+            >>> bucket.download("bucket/file.txt", "local/file.txt", overwrite=False)  # doctest: +SKIP
 
         Download a directory:
-            >>> bucket.download('bucket/dir/', 'local/dir/')  # doctest: +SKIP
+            >>> bucket.download("bucket/dir/", "local/dir/", overwrite=True)  # doctest: +SKIP
         """
         local_path = Path(local_path)
         if bucket_path.endswith("/"):
@@ -295,24 +322,29 @@ class Bucket:
         Parameters
         ----------
         bucket_path : str
-            Path in the bucket to delete.
+            The file or directory path in the bucket to delete.
+            - If it ends with '/', it is treated as a directory.
 
         Raises
         ------
         ValueError
-            If the file or directory does not exist.
+             If the file or directory does not exist in the bucket.
 
         Notes
         -----
-        - Deletes a single file or all files within a directory.
+        - Deletes a single file or recursively deletes all files in a directory.
 
         Examples
         --------
+        Create the S3 client and bucket:
+            >>> s3 = S3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, REGION) # doctest: +SKIP
+            >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
+
         Delete a single file:
-            >>> bucket.delete('bucket/file.txt')  # doctest: +SKIP
+            >>> bucket.delete("bucket/file.txt")  # doctest: +SKIP
 
         Delete a directory:
-            >>> bucket.delete('bucket/dir/')  # doctest: +SKIP
+            >>> bucket.delete("bucket/dir/")  # doctest: +SKIP
         """
         if bucket_path.endswith("/"):
             self._delete_directory(bucket_path)
@@ -344,12 +376,17 @@ class Bucket:
         Parameters
         ----------
         bucket_path : str
-            Path in the bucket to check.
+            The path of the file in the bucket.
 
         Returns
         -------
         bool
             True if the file exists, False otherwise.
+
+        Examples
+        --------
+        Check if a file exists in the bucket:
+            >>> bucket.file_exists("bucket/file.txt")  # doctest: +SKIP
         """
         objs = list(self.bucket.objects.filter(Prefix=bucket_path))
         return len(objs) > 0 and objs[0].key == bucket_path
