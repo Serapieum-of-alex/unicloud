@@ -398,3 +398,62 @@ class Bucket(AbstractBucket):
         """
         objs = list(self.bucket.objects.filter(Prefix=bucket_path))
         return len(objs) > 0 and objs[0].key == bucket_path
+
+    def rename(self, old_path: str, new_path: str):
+        """
+        Rename a file or directory in the S3 bucket.
+
+        This operation renames a file or directory by copying the content to a new path
+        and then deleting the original path.
+
+        Parameters
+        ----------
+        old_path : str
+            The current path of the file or directory in the bucket.
+        new_path : str
+            The new path for the file or directory in the bucket.
+
+        Raises
+        ------
+        ValueError
+            If the source file or directory does not exist.
+            If the destination path already exists.
+
+        Notes
+        -----
+        - For directories, all files and subdirectories are renamed recursively.
+        - The operation is atomic for individual files but not for directories.
+
+        Examples
+        --------
+        Create the S3 client and bucket:
+            >>> s3 = S3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, REGION) # doctest: +SKIP
+            >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
+
+        Rename a file:
+            >>> bucket.rename("bucket/old_file.txt", "bucket/new_file.txt")  # doctest: +SKIP
+
+        Rename a directory:
+            >>> bucket.rename("bucket/old_dir/", "bucket/new_dir/")  # doctest: +SKIP
+        """
+        # Check if the old path exists
+        objects = list(self.bucket.objects.filter(Prefix=old_path))
+        if not objects:
+            raise ValueError(f"The path '{old_path}' does not exist in the bucket.")
+
+        # Check if the new path already exists
+        if any(self.bucket.objects.filter(Prefix=new_path)):
+            raise ValueError(f"The destination path '{new_path}' already exists.")
+
+        # Perform the rename
+        for obj in objects:
+            source_key = obj.key
+            if old_path.endswith("/") and not source_key.startswith(old_path):
+                continue  # Skip unrelated files
+            destination_key = source_key.replace(old_path, new_path, 1)
+            self.bucket.Object(destination_key).copy_from(
+                CopySource={"Bucket": self.bucket.name, "Key": source_key}
+            )
+            obj.delete()
+
+        print(f"Renamed '{old_path}' to '{new_path}'.")
