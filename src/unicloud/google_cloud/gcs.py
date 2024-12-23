@@ -785,21 +785,25 @@ class Bucket(AbstractBucket):
         - Deleting a non-existent file or directory raises a `ValueError`.
         """
         if bucket_path.endswith("/"):
-            # Delete all files in the directory
-            blobs = self.bucket.list_blobs(prefix=bucket_path)
-            deleted_files = []
-            for blob in blobs:
-                blob.delete()
-                deleted_files.append(blob.name)
-                print(f"Deleted file: {blob.name}")
-
-            if not deleted_files:
-                raise ValueError(f"No files found in the directory: {bucket_path}")
+            self._delete_directory(bucket_path)
         else:
-            # Delete a single file
-            blob = self.bucket.blob(bucket_path)
-            if blob.exists():
-                blob.delete()
-                print(f"Blob {bucket_path} deleted.")
-            else:
-                raise ValueError(f"File {bucket_path} not found in the bucket.")
+            self._delete_file(bucket_path)
+
+    def _delete_directory(self, bucket_path: str):
+        blobs = self.bucket.list_blobs(prefix=bucket_path)
+        deleted_files = []
+        for blob in blobs:
+            blob.delete()
+            deleted_files.append(blob.name)
+            print(f"Deleted file: {blob.name}")
+
+        if not deleted_files:
+            raise ValueError(f"No files found in the directory: {bucket_path}")
+
+    def _delete_file(self, bucket_path: str):
+        blob = self.bucket.blob(bucket_path)
+        if blob.exists():
+            blob.delete()
+            print(f"Blob {bucket_path} deleted.")
+        else:
+            raise ValueError(f"File {bucket_path} not found in the bucket.")
