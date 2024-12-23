@@ -38,6 +38,16 @@ class AbstractBucket(ABC):
     """Abstract class for cloud storage bucket."""
 
     @abstractmethod
+    def __str__(self):
+        """Return the name of the bucket."""
+        pass
+
+    @abstractmethod
+    def __repr__(self):
+        """Return the name of the bucket."""
+        pass
+
+    @abstractmethod
     def upload(
         self,
         local_path: Union[str, Path],
