@@ -836,11 +836,17 @@ class Bucket(AbstractBucket):
 
         Examples
         --------
+        First get you bucket:
+            >>> Bucket_ID = "test-bucket"
+            >>> PROJECT_ID = "py-project-id"
+            >>> gcs = GCS(PROJECT_ID) # doctest: +SKIP
+            >>> my_bucket = gcs.get_bucket(Bucket_ID) # doctest: +SKIP
+
         Rename a file:
-            >>> bucket.rename("bucket/old_file.txt", "bucket/new_file.txt") # doctest: +SKIP
+            >>> my_bucket.rename("bucket/old_file.txt", "bucket/new_file.txt") # doctest: +SKIP
 
         Rename a directory:
-            >>> bucket.rename("bucket/old_dir/", "bucket/new_dir/") # doctest: +SKIP
+            >>> my_bucket.rename("bucket/old_dir/", "bucket/new_dir/") # doctest: +SKIP
         """
         # Check if the old path exists
         blobs = list(self.bucket.list_blobs(prefix=old_path))

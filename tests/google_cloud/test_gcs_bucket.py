@@ -1,9 +1,10 @@
 import fnmatch
 import os
 import shutil
+import unittest
 from pathlib import Path
 from typing import Dict
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 from google.cloud import storage
@@ -481,3 +482,62 @@ class TestDeleteMock:
             gcs_bucket.delete(directory)
 
         mock_bucket.list_blobs.assert_called_once_with(prefix=directory)
+
+
+class TestGCSBucketRename(unittest.TestCase):
+    def setUp(self):
+        self.mock_bucket = MagicMock()
+        self.bucket = Bucket(self.mock_bucket)
+
+    def test_rename_file(self):
+        # Mock the list_blobs method to return a single file
+        old_blob = MagicMock(name="old_path/file.txt")
+        self.mock_bucket.list_blobs.side_effect = [[old_blob], []]
+
+        # Call the rename method
+        self.bucket.rename("old_path/file.txt", "new_path/file.txt")
+
+        # Verify the copy and delete operations
+        self.mock_bucket.blob("new_path/file.txt").rewrite.assert_called_once_with(
+            old_blob
+        )
+        old_blob.delete.assert_called_once()
+
+    def test_rename_directory(self):
+        # Mock the list_blobs method to return multiple files in a directory
+        old_blob_1 = MagicMock(name="old_path/dir/file1.txt")
+        old_blob_2 = MagicMock(name="old_path/dir/file2.txt")
+        self.mock_bucket.list_blobs.side_effect = [[old_blob_1, old_blob_2], []]
+
+        # Call the rename method
+        self.bucket.rename("old_path/dir/", "new_path/dir/")
+
+        # Verify the copy and delete operations for each file
+        expected_calls = [call(old_blob_1), call(old_blob_2)]
+        self.mock_bucket.blob("new_path/dir/file1.txt").rewrite.assert_has_calls(
+            [expected_calls[0]]
+        )
+        self.mock_bucket.blob("new_path/dir/file2.txt").rewrite.assert_has_calls(
+            [expected_calls[1]]
+        )
+        old_blob_1.delete.assert_called_once()
+        old_blob_2.delete.assert_called_once()
+
+    def test_rename_nonexistent_path(self):
+        # Mock the list_blobs method to return an empty list
+        self.mock_bucket.list_blobs.return_value = []
+
+        # Verify that ValueError is raised
+        with self.assertRaises(ValueError):
+            self.bucket.rename("nonexistent_path/", "new_path/")
+
+    def test_rename_to_existing_path(self):
+        # Mock the list_blobs method to return a single file for both old and new paths
+        self.mock_bucket.list_blobs.side_effect = [
+            [MagicMock(name="old_path/file.txt")],
+            [MagicMock(name="new_path/file.txt")],
+        ]
+
+        # Verify that ValueError is raised
+        with self.assertRaises(ValueError):
+            self.bucket.rename("old_path/file.txt", "new_path/file.txt")
