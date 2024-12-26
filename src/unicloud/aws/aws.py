@@ -97,7 +97,24 @@ class S3(CloudStorageFactory):
         print(f"File {bucket_path} downloaded to {local_path}.")
 
     def get_bucket(self, bucket_name: str) -> "Bucket":
-        """Retrieve a bucket object."""
+        """Retrieve a bucket object.
+
+        Parameters
+        ----------
+        bucket_name : str
+            The name of the bucket to retrieve.
+
+        Returns
+        -------
+        Bucket
+            A Bucket object for the specified bucket.
+
+        Examples
+        --------
+        Create the S3 client and get your bucket:
+            >>> s3 = S3() # doctest: +SKIP
+            >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
+        """
         s3 = boto3.resource(
             "s3",
             aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
@@ -175,7 +192,7 @@ class Bucket(AbstractBucket):
         Examples
         --------
         Create the S3 client and bucket:
-            >>> s3 = S3("eu-central-1") # doctest: +SKIP
+            >>> s3 = S3() # doctest: +SKIP
             >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
 
         List all files in the bucket:
@@ -219,7 +236,7 @@ class Bucket(AbstractBucket):
         Examples
         --------
         Create the S3 client and bucket:
-            >>> s3 = S3("eu-central-1") # doctest: +SKIP
+            >>> s3 = S3() # doctest: +SKIP
             >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
 
         Upload a single file:
@@ -288,7 +305,7 @@ class Bucket(AbstractBucket):
         Examples
         --------
         Create the S3 client and bucket:
-            >>> s3 = S3("eu-central-1") # doctest: +SKIP
+            >>> s3 = S3() # doctest: +SKIP
             >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
 
         Download a single file:
@@ -347,7 +364,7 @@ class Bucket(AbstractBucket):
         Examples
         --------
         Create the S3 client and bucket:
-            >>> s3 = S3("eu-central-1") # doctest: +SKIP
+            >>> s3 = S3() # doctest: +SKIP
             >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
 
         Delete a single file:
@@ -396,7 +413,7 @@ class Bucket(AbstractBucket):
         Examples
         --------
         Create the S3 client and get your bucket:
-            >>> s3 = S3("eu-central-1") # doctest: +SKIP
+            >>> s3 = S3() # doctest: +SKIP
             >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
 
         Check if a file exists in the bucket:
@@ -433,7 +450,7 @@ class Bucket(AbstractBucket):
         Examples
         --------
         Create the S3 client and get your bucket:
-            >>> s3 = S3("eu-central-1") # doctest: +SKIP
+            >>> s3 = S3() # doctest: +SKIP
             >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
 
         Rename a file:
