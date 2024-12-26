@@ -1,7 +1,7 @@
 import shutil
 from pathlib import Path
 from typing import Dict
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import boto3
 import pytest
@@ -57,11 +57,11 @@ class TestBucketE2E:
         file_name = "test-upload-overwrite.txt"
         self.bucket.upload(test_file, file_name)
 
-        # Overwrite = False
+        # test with Overwrite = False
         with pytest.raises(ValueError, match="File .* already exists."):
             self.bucket.upload(test_file, file_name, overwrite=False)
 
-        # Overwrite = True
+        # test with Overwrite = True
         self.bucket.upload(test_file, file_name, overwrite=True)
         objects = [obj.key for obj in self.bucket.bucket.objects.all()]
         assert file_name in objects
@@ -127,11 +127,11 @@ class TestBucketE2E:
         self.bucket.upload(test_file, file_name)
         self.bucket.download(file_name, str(download_path))
 
-        # Overwrite = False
+        # test with Overwrite = False
         with pytest.raises(ValueError, match="File .* already exists locally."):
             self.bucket.download(file_name, str(download_path), overwrite=False)
 
-        # Overwrite = True
+        # test with Overwrite = True
         self.bucket.download(file_name, str(download_path), overwrite=True)
         self.bucket.delete(file_name)
         download_path.unlink()
@@ -286,7 +286,7 @@ class TestDownloadMock:
         ]
         self.mock_bucket.objects.filter.return_value = mock_objects
 
-        with patch("pathlib.Path.mkdir") as mock_mkdir:
+        with patch("pathlib.Path.mkdir"):
             self.bucket.download("test_dir/", str(local_dir))
 
         for obj in mock_objects:
@@ -424,3 +424,65 @@ class TestDeleteMock:
         self.mock_bucket.objects.filter.assert_called_once_with(
             Prefix="nonexistent-file.txt"
         )
+
+
+class TestRenameMock:
+    def setup_method(self):
+        """
+        Setup a mocked S3 Bucket instance.
+        """
+        # the aws original bucket
+        self.mock_bucket = MagicMock()
+        # my bucket object
+        self.bucket = Bucket(self.mock_bucket)
+
+    def test_rename_file_mock(self):
+        """
+        Test renaming a file in the bucket using mocks.
+        """
+        mock_obj = MagicMock()
+        mock_obj.key = "folder/old_file.txt"
+        # the aws original bucket objects
+        self.mock_bucket.objects.filter.side_effect = [[mock_obj], []]
+        self.bucket.rename("folder/old_file.txt", "folder/new_file.txt")
+
+        # Verify copy and delete
+        self.mock_bucket.Object(
+            "folder/new_file.txt"
+        ).copy_from.assert_called_once_with(
+            CopySource={"Bucket": self.mock_bucket.name, "Key": "folder/old_file.txt"}
+        )
+        mock_obj.delete.assert_called_once()
+
+    def test_rename_directory_mock(self):
+        """
+        Test renaming a directory in the bucket using mocks.
+        """
+        mock_obj1 = MagicMock(key="folder/old_dir/file1.txt")
+        mock_obj2 = MagicMock(key="folder/old_dir/file2.txt")
+        self.mock_bucket.objects.filter.side_effect = [[mock_obj1, mock_obj2], []]
+
+        self.bucket.rename("folder/old_dir/", "folder/new_dir/")
+
+        expected_calls = [
+            call(
+                CopySource={
+                    "Bucket": self.mock_bucket.name,
+                    "Key": "folder/old_dir/file1.txt",
+                }
+            ),
+            call(
+                CopySource={
+                    "Bucket": self.mock_bucket.name,
+                    "Key": "folder/old_dir/file2.txt",
+                }
+            ),
+        ]
+        self.mock_bucket.Object("folder/new_dir/file1.txt").copy_from.assert_has_calls(
+            [expected_calls[0]]
+        )
+        self.mock_bucket.Object("folder/new_dir/file2.txt").copy_from.assert_has_calls(
+            [expected_calls[1]]
+        )
+        mock_obj1.delete.assert_called_once()
+        mock_obj2.delete.assert_called_once()

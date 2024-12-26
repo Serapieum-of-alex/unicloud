@@ -447,13 +447,15 @@ class Bucket(AbstractBucket):
 
         # Perform the rename
         for obj in objects:
-            source_key = obj.key
-            if old_path.endswith("/") and not source_key.startswith(old_path):
+            old_object_name = obj.key
+            if old_path.endswith("/") and not old_object_name.startswith(old_path):
                 continue  # Skip unrelated files
-            destination_key = source_key.replace(old_path, new_path, 1)
-            self.bucket.Object(destination_key).copy_from(
-                CopySource={"Bucket": self.bucket.name, "Key": source_key}
+            new_object_name = old_object_name.replace(old_path, new_path, 1)
+            # create a copy of the object to the new path
+            self.bucket.Object(new_object_name).copy_from(
+                CopySource={"Bucket": self.bucket.name, "Key": old_object_name}
             )
+            # delete the original object
             obj.delete()
 
         print(f"Renamed '{old_path}' to '{new_path}'.")
