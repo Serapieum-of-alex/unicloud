@@ -176,7 +176,7 @@ class Bucket(AbstractBucket):
         Examples
         --------
         Create the S3 client and bucket:
-            >>> s3 = S3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, REGION) # doctest: +SKIP
+            >>> s3 = S3("eu-central-1") # doctest: +SKIP
             >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
 
         List all files in the bucket:
@@ -220,7 +220,7 @@ class Bucket(AbstractBucket):
         Examples
         --------
         Create the S3 client and bucket:
-            >>> s3 = S3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, REGION) # doctest: +SKIP
+            >>> s3 = S3("eu-central-1") # doctest: +SKIP
             >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
 
         Upload a single file:
@@ -289,7 +289,7 @@ class Bucket(AbstractBucket):
         Examples
         --------
         Create the S3 client and bucket:
-            >>> s3 = S3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, REGION) # doctest: +SKIP
+            >>> s3 = S3("eu-central-1") # doctest: +SKIP
             >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
 
         Download a single file:
@@ -348,7 +348,7 @@ class Bucket(AbstractBucket):
         Examples
         --------
         Create the S3 client and bucket:
-            >>> s3 = S3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, REGION) # doctest: +SKIP
+            >>> s3 = S3("eu-central-1") # doctest: +SKIP
             >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
 
         Delete a single file:
@@ -380,13 +380,13 @@ class Bucket(AbstractBucket):
             obj.delete()
             print(f"Deleted {obj.key}.")
 
-    def file_exists(self, bucket_path: str) -> bool:
+    def file_exists(self, file_name: str) -> bool:
         """
         Check if a file exists in the bucket.
 
         Parameters
         ----------
-        bucket_path : str
+        file_name : str
             The path of the file in the bucket.
 
         Returns
@@ -396,11 +396,15 @@ class Bucket(AbstractBucket):
 
         Examples
         --------
+        Create the S3 client and get your bucket:
+            >>> s3 = S3("eu-central-1") # doctest: +SKIP
+            >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
+
         Check if a file exists in the bucket:
             >>> bucket.file_exists("bucket/file.txt")  # doctest: +SKIP
         """
-        objs = list(self.bucket.objects.filter(Prefix=bucket_path))
-        return len(objs) > 0 and objs[0].key == bucket_path
+        objs = list(self.bucket.objects.filter(Prefix=file_name))
+        return len(objs) > 0 and objs[0].key == file_name
 
     def rename(self, old_path: str, new_path: str):
         """
@@ -429,8 +433,8 @@ class Bucket(AbstractBucket):
 
         Examples
         --------
-        Create the S3 client and bucket:
-            >>> s3 = S3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, REGION) # doctest: +SKIP
+        Create the S3 client and get your bucket:
+            >>> s3 = S3("eu-central-1") # doctest: +SKIP
             >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
 
         Rename a file:
