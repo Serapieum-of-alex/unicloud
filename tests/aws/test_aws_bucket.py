@@ -16,7 +16,7 @@ class TestBucketE2E:
     """
 
     @pytest.fixture(autouse=True)
-    def setup(self, s3_bucket_name, region):
+    def setup(self, s3_bucket_name):
         """
         Setup a mock S3 bucket and temporary directory for testing.
         """
@@ -24,7 +24,7 @@ class TestBucketE2E:
             "s3",
             aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
             aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-            region_name=region,
+            region_name=os.getenv("AWS_DEFAULT_REGION"),
         )
         self.bucket = Bucket(s3.Bucket(s3_bucket_name))
 
@@ -313,7 +313,7 @@ class TestDeleteE2E:
     """
 
     @pytest.fixture(autouse=True)
-    def setup(self, s3_bucket_name, region):
+    def setup(self, s3_bucket_name):
         """
         Setup a mock S3 bucket and temporary directory for testing.
         """
@@ -321,7 +321,7 @@ class TestDeleteE2E:
             "s3",
             aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
             aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-            region_name=region,
+            region_name=os.getenv("AWS_DEFAULT_REGION"),
         )
         self.bucket = Bucket(s3.Bucket(s3_bucket_name))
 

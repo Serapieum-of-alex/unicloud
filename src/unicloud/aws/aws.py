@@ -15,20 +15,18 @@ class S3(CloudStorageFactory):
 
     def __init__(
         self,
-        region_name: Optional[str] = None,
     ):
         """
         Initialize the AWS S3 client with credentials and region information.
 
         - To initialize the `S3` client, you have to store the credentials in the following
-        environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`.
+        environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`.
 
-        Parameters
+        References
         ----------
-        region_name: Optional[str]
-            The name of the AWS region to connect to. Default is None.
+        Set the environment variables required for the AWS CLI:
+            https://docs.aws.amazon.com/cli/v1/userguide/cli-configure-envvars.html
         """
-        self.region_name = region_name
         self._client = self.create_client()
 
     @property
@@ -54,9 +52,13 @@ class S3(CloudStorageFactory):
         if aws_secret_access_key is None:
             raise ValueError("AWS_SECRET_ACCESS_KEY is not set.")
 
+        region = os.getenv("AWS_DEFAULT_REGION")
+        if region is None:
+            raise ValueError("AWS_DEFAULT_REGION is not set.")
+
         return boto3.client(
             "s3",
-            region_name=self.region_name,
+            region_name=region,
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key,
         )
@@ -100,7 +102,7 @@ class S3(CloudStorageFactory):
             "s3",
             aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
             aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-            region_name=self.region_name,
+            region_name=os.getenv("AWS_DEFAULT_REGION"),
         )
         bucket = s3.Bucket(bucket_name)
         return Bucket(bucket)
@@ -132,10 +134,7 @@ class Bucket(AbstractBucket):
             >>> bucket = Bucket(s3.Bucket("my-bucket")) # doctest: +SKIP
 
         - Get the Bucket object from an S3 client:
-            >>> AWS_ACCESS_KEY_ID = "your-access key"
-            >>> AWS_SECRET_ACCESS_KEY = "your-secret-key"
-            >>> REGION = "us-east-1"
-            >>> s3 = S3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, REGION) # doctest: +SKIP
+            >>> s3 = S3() # doctest: +SKIP
             >>> bucket = s3.get_bucket("my-bucket") # doctest: +SKIP
         """
         self._bucket = bucket

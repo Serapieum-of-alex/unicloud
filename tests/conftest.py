@@ -7,13 +7,7 @@ import pytest
 
 from unicloud.aws.aws import S3
 
-REGION = "eu-central-1"
 S3_BUCKET_NAME = "testing-unicloud"
-
-
-@pytest.fixture
-def region() -> str:
-    return REGION
 
 
 @pytest.fixture
@@ -23,7 +17,7 @@ def s3_bucket_name() -> str:
 
 @pytest.fixture
 def unicloud_s3() -> S3:
-    return S3(REGION)
+    return S3()
 
 
 @pytest.fixture
@@ -58,7 +52,7 @@ def boto_client() -> boto3.client:
         "s3",
         aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
         aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-        region_name=REGION,
+        region_name=os.getenv("AWS_DEFAULT_REGION"),
     )
 
 
@@ -70,13 +64,3 @@ def aws_credentials():
         "aws_secret_access_key": "testing",
         "region_name": "us-east-1",
     }
-
-
-# @pytest.fixture
-# def s3_client_mock(aws_credentials):
-#     """Create an S3 client for testing."""
-#     with mock_aws():
-#         boto3.client("s3", region_name=aws_credentials["region_name"]).create_bucket(
-#             Bucket="my-test-bucket"
-#         )
-#         yield S3(**aws_credentials)

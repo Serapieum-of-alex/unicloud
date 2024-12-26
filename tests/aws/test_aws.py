@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+from unittest.mock import patch
 
 import boto3
 from moto import mock_aws
@@ -9,51 +10,57 @@ from moto import mock_aws
 from unicloud.aws.aws import S3, Bucket
 
 MY_TEST_BUCKET = "testing-unicloud"
+MOCK_BUCKET_NAME = "testing-fake-name"
 
 
-class TestS3:
+class TestS3Mock:
     """Test the S3 class."""
 
     def setup_method(self):
         """Set up the S3 client."""
-        mock = mock_aws()
-        mock.start()
+        self.mock = mock_aws()
+        self.mock.start()
 
-        """Setup for S3 client tests."""
-        self.aws_access_key_id = "fake_key"
-        self.aws_secret_access_key = "fake_secret"
-        self.region_name = "us-east-1"
-        self.client = S3(self.region_name)
+        self.my_s3 = S3()
 
         # Create a mock S3 bucket
-        self.bucket_name = MY_TEST_BUCKET
-        self.client.client.create_bucket(Bucket=self.bucket_name)
+        self.bucket_name = MOCK_BUCKET_NAME
+        self.my_s3.client.create_bucket(
+            Bucket=self.bucket_name,
+            CreateBucketConfiguration={
+                "LocationConstraint": os.getenv("AWS_DEFAULT_REGION", "us-east-1")
+            },
+        )
+
+    def teardown_method(self):
+        """Stop the S3 mock."""
+        self.mock.stop()
 
     def test_upload(self, test_file: str):
         """Test uploading data to S3."""
-        bucket_name = MY_TEST_BUCKET
+        bucket_name = MOCK_BUCKET_NAME
         object_name = "test-object"
         destination = f"{bucket_name}/{object_name}"
 
-        self.client.upload(test_file, destination)
+        self.my_s3.upload(test_file, destination)
 
         # Check the file exists in the bucket
-        response = self.client.client.list_objects_v2(Bucket=self.bucket_name)
+        response = self.my_s3.client.list_objects_v2(Bucket=self.bucket_name)
         object_keys = [obj["Key"] for obj in response.get("Contents", [])]
         assert object_name in object_keys
 
     def test_download_data(self, test_file: str, test_file_content: str):
         """Test downloading data from S3."""
 
-        bucket_name = MY_TEST_BUCKET
+        bucket_name = MOCK_BUCKET_NAME
         object_name = "test-object.txt"
         bucket_path = f"{bucket_name}/{object_name}"
         # Manually upload a file to mock S3 to download later
-        self.client.client.put_object(
+        self.my_s3.client.put_object(
             Bucket=self.bucket_name, Key=object_name, Body=test_file_content
         )
         download_path = "tests/data/test-download-aws.txt"
-        self.client.download(bucket_path, download_path)
+        self.my_s3.download(bucket_path, download_path)
 
         # Verify the file was downloaded correctly
         with open(download_path, "r") as f:
