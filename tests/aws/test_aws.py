@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 
 import boto3
-import pytest
 from moto import mock_aws
 
 from unicloud.aws.aws import S3, Bucket
