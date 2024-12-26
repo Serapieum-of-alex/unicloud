@@ -807,3 +807,59 @@ class Bucket(AbstractBucket):
             print(f"Blob {bucket_path} deleted.")
         else:
             raise ValueError(f"File {bucket_path} not found in the bucket.")
+
+    def rename(self, old_path: str, new_path: str):
+        """
+        Rename a file or directory in the GCS bucket.
+
+        This operation renames a file or directory by copying the content to a new path
+        and then deleting the original path.
+
+        Parameters
+        ----------
+        old_path : str
+            The current path of the file or directory in the bucket.
+        new_path : str
+            The new path for the file or directory in the bucket.
+
+        Raises
+        ------
+        ValueError
+            If the source file or directory does not exist.
+            If the destination path already exists.
+
+        Notes
+        -----
+        - For directories, all files and subdirectories are renamed recursively.
+        - The operation is atomic for individual files but not for directories.
+
+        Examples
+        --------
+        Rename a file:
+            >>> bucket.rename("bucket/old_file.txt", "bucket/new_file.txt") # doctest: +SKIP
+
+        Rename a directory:
+            >>> bucket.rename("bucket/old_dir/", "bucket/new_dir/") # doctest: +SKIP
+        """
+        # Check if the old path exists
+        blobs = list(self.bucket.list_blobs(prefix=old_path))
+        if not blobs:
+            raise ValueError(f"The path '{old_path}' does not exist in the bucket.")
+
+        # Check if the new path already exists
+        if any(self.bucket.list_blobs(prefix=new_path)):
+            raise ValueError(f"The destination path '{new_path}' already exists.")
+
+        # Perform the rename
+        for blob in blobs:
+            old_blob_name = blob.name
+            if old_path.endswith("/") and not old_blob_name.startswith(old_path):
+                continue  # Skip unrelated files
+            new_blob_name = old_blob_name.replace(old_path, new_path, 1)
+            # create a copy of the blob to the new path
+            new_blob = self.bucket.blob(new_blob_name)
+            new_blob.rewrite(blob)
+            # delete the original blob
+            blob.delete()
+
+        print(f"Renamed '{old_path}' to '{new_path}'.")

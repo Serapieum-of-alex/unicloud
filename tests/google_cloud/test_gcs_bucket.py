@@ -86,6 +86,41 @@ class TestGCSBucketE2E:
         self.bucket.delete(str(test_file))
         assert str(test_file) not in self.bucket.list_files()
 
+    def test_rename_file(self, test_file: Path):
+        """
+        Test renaming a single file in the bucket.
+        """
+        old_name = "test-rename-old-file.txt"
+        new_name = "test-rename-new-file.txt"
+        self.bucket.upload(test_file, old_name, overwrite=True)
+
+        self.bucket.rename(old_name, new_name)
+
+        # Verify the new file exists and the old file does not
+        assert self.bucket.file_exists(new_name)
+        assert not self.bucket.file_exists(old_name)
+        self.bucket.delete(new_name)
+
+    def test_rename_directory(self, upload_test_data: Dict[str, Path]):
+        """
+        Test renaming a directory in the bucket.
+        """
+        old_dir = "old_directory/"
+        new_dir = "new_directory/"
+        local_dir = upload_test_data["local_dir"]
+        self.bucket.upload(local_dir, old_dir, overwrite=True)
+
+        # Rename the directory
+        self.bucket.rename(old_dir, new_dir)
+
+        # Verify files under the new directory exist and old directory does not
+        for file in upload_test_data["expected_files"]:
+            new_file = file.replace("upload-dir", "new_directory")
+            assert self.bucket.file_exists(new_file)
+            assert not self.bucket.file_exists(file)
+
+        self.bucket.delete(new_dir)
+
 
 @pytest.mark.mock
 class TestListFilesMock:
