@@ -7,20 +7,8 @@ import pytest
 
 from unicloud.aws.aws import S3
 
-AWS_ACCESS_KEY_ID = os.getenv("aws_access_key_id")
-AWS_SECRET_ACCESS_KEY = os.getenv("aws_secret_access_key")
 REGION = "eu-central-1"
 S3_BUCKET_NAME = "testing-unicloud"
-
-
-@pytest.fixture
-def aws_access_key_id() -> str:
-    return AWS_ACCESS_KEY_ID
-
-
-@pytest.fixture
-def aws_secret_access_key() -> str:
-    return AWS_SECRET_ACCESS_KEY
 
 
 @pytest.fixture
@@ -35,7 +23,7 @@ def s3_bucket_name() -> str:
 
 @pytest.fixture
 def unicloud_s3() -> S3:
-    return S3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, REGION)
+    return S3(REGION)
 
 
 @pytest.fixture
@@ -68,8 +56,8 @@ def upload_test_data() -> Dict[str, Path]:
 def boto_client() -> boto3.client:
     return boto3.client(
         "s3",
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
         region_name=REGION,
     )
 

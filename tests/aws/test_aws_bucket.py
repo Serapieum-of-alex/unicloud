@@ -1,3 +1,4 @@
+import os
 import shutil
 from pathlib import Path
 from typing import Dict
@@ -15,14 +16,14 @@ class TestBucketE2E:
     """
 
     @pytest.fixture(autouse=True)
-    def setup(self, s3_bucket_name, aws_access_key_id, aws_secret_access_key, region):
+    def setup(self, s3_bucket_name, region):
         """
         Setup a mock S3 bucket and temporary directory for testing.
         """
         s3 = boto3.resource(
             "s3",
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
+            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
             region_name=region,
         )
         self.bucket = Bucket(s3.Bucket(s3_bucket_name))
@@ -312,14 +313,14 @@ class TestDeleteE2E:
     """
 
     @pytest.fixture(autouse=True)
-    def setup(self, s3_bucket_name, aws_access_key_id, aws_secret_access_key, region):
+    def setup(self, s3_bucket_name, region):
         """
         Setup a mock S3 bucket and temporary directory for testing.
         """
         s3 = boto3.resource(
             "s3",
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
+            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
             region_name=region,
         )
         self.bucket = Bucket(s3.Bucket(s3_bucket_name))

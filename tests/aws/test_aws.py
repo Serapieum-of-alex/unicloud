@@ -23,9 +23,7 @@ class TestS3:
         self.aws_access_key_id = "fake_key"
         self.aws_secret_access_key = "fake_secret"
         self.region_name = "us-east-1"
-        self.client = S3(
-            self.aws_access_key_id, self.aws_secret_access_key, self.region_name
-        )
+        self.client = S3(self.region_name)
 
         # Create a mock S3 bucket
         self.bucket_name = MY_TEST_BUCKET

@@ -15,24 +15,19 @@ class S3(CloudStorageFactory):
 
     def __init__(
         self,
-        aws_access_key_id: str,
-        aws_secret_access_key: str,
         region_name: Optional[str] = None,
     ):
         """
         Initialize the AWS S3 client with credentials and region information.
 
+        - To initialize the `S3` client, you have to store the credentials in the following
+        environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`.
+
         Parameters
         ----------
-        aws_access_key_id: [str]
-            Your AWS access key ID.
-        aws_secret_access_key: [str]
-            Your AWS secret access key.
         region_name: Optional[str]
             The name of the AWS region to connect to. Default is None.
         """
-        self.aws_access_key_id = aws_access_key_id
-        self.aws_secret_access_key = aws_secret_access_key
         self.region_name = region_name
         self._client = self.create_client()
 
@@ -51,11 +46,19 @@ class S3(CloudStorageFactory):
 
         Initialize the S3 client with AWS credentials and region.
         """
+        aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+        if aws_access_key_id is None:
+            raise ValueError("AWS_ACCESS_KEY_ID is not set.")
+
+        aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+        if aws_secret_access_key is None:
+            raise ValueError("AWS_SECRET_ACCESS_KEY is not set.")
+
         return boto3.client(
             "s3",
             region_name=self.region_name,
-            aws_access_key_id=self.aws_access_key_id,
-            aws_secret_access_key=self.aws_secret_access_key,
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
         )
 
     def upload(self, local_path: Union[str, Path], bucket_path: str):
@@ -95,8 +98,8 @@ class S3(CloudStorageFactory):
         """Retrieve a bucket object."""
         s3 = boto3.resource(
             "s3",
-            aws_access_key_id=self.aws_access_key_id,
-            aws_secret_access_key=self.aws_secret_access_key,
+            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
             region_name=self.region_name,
         )
         bucket = s3.Bucket(bucket_name)
