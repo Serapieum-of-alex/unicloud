@@ -75,7 +75,7 @@ class AbstractBucket(ABC):
         pass
 
     @abstractmethod
-    def file_exists(self):
+    def file_exists(self, file_name: str) -> bool:
         """Check if a file/directory exists in the bucket."""
         pass
 

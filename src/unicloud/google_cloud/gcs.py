@@ -44,7 +44,6 @@ class GCS(CloudStorageFactory):
                         'https://www.googleapis.com/auth/devstorage.full_control',
                         'https://www.googleapis.com/auth/devstorage.read_only',
                         'https://www.googleapis.com/auth/devstorage.read_write'
-                        )
                     )
             <BlankLine>
 
@@ -152,7 +151,7 @@ class GCS(CloudStorageFactory):
 
         Returns
         -------
-        google cloud storage client object
+        Google Cloud storage client object
 
         Raises
         ------
@@ -176,8 +175,8 @@ class GCS(CloudStorageFactory):
             client = storage.Client.from_service_account_info(service_key_content)
         else:
             raise ValueError(
-                "Since the GOOGLE_APPLICATION_CREDENTIALS and the EE_PRIVATE_KEY and EE_SERVICE_ACCOUNT are not in your"
-                "env variables you have to provide a path to your service account"
+                "Since the GOOGLE_APPLICATION_CREDENTIALS and the SERVICE_KEY_CONTENT are not in your env variables "
+                "you have to provide a path to your service account"
             )
 
         return client
@@ -466,7 +465,7 @@ class Bucket(AbstractBucket):
         bucket_path : str
             The destination path in the GCS bucket.
         overwrite : bool
-            If True, overwrites the file if it already exists in the bucket. If False, raises
+            If True, the method overwrites the file if it already exists in the bucket. If False, raises
             a `ValueError` if the destination file already exists.
 
         Raises
@@ -571,7 +570,9 @@ class Bucket(AbstractBucket):
                 )
                 self._upload_file(file, bucket_file_path, overwrite)
 
-    def download(self, bucket_path: str, local_path: str, overwrite: bool = False):
+    def download(
+        self, bucket_path: str, local_path: Union[Path, str], overwrite: bool = False
+    ):
         """Download a file from GCS.
 
         Downloads a file from a Google Cloud Storage bucket to a local directory or path.
