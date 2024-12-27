@@ -20,6 +20,20 @@ Current release info
 |----------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [![Conda Recipe](https://img.shields.io/badge/recipe-unicloud-green.svg)](https://anaconda.org/conda-forge/unicloud) | [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/unicloud.svg)](https://anaconda.org/conda-forge/unicloud) [![Downloads](https://pepy.tech/badge/unicloud)](https://pepy.tech/project/unicloud) [![Downloads](https://pepy.tech/badge/unicloud/month)](https://pepy.tech/project/unicloud)  [![Downloads](https://pepy.tech/badge/unicloud/week)](https://pepy.tech/project/unicloud)  ![PyPI - Downloads](https://img.shields.io/pypi/dd/unicloud?color=blue&style=flat-square) | [![Conda Version](https://img.shields.io/conda/vn/conda-forge/unicloud.svg)](https://anaconda.org/conda-forge/unicloud) [![PyPI version](https://badge.fury.io/py/unicloud.svg)](https://badge.fury.io/py/unicloud) | [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/unicloud.svg)](https://anaconda.org/conda-forge/unicloud) [![Join the chat at https://gitter.im/unicloud/unicloud](https://badges.gitter.im/unicloud/unicloud.svg)](https://gitter.im/unicloud/unicloud?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) |
 
+Conda-forge build status
+========================
+<table><tr><td>All platforms:</td>
+    <td>
+      <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=21798&branchName=main">
+        <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/unicloud-feedstock?branchName=main">
+      </a>
+    </td>
+  </tr>
+</table>
+
+- feedstock link: [unicloud](https://github.com/conda-forge/unicloud-feedstock)
+
+
 unicloud - Cloud utility package
 =====================================================================
 - **Unicloud** provides robust and intuitive tools designed to simplify interactions with AWS S3 and Google

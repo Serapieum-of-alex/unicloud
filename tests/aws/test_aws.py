@@ -2,14 +2,60 @@
 
 import os
 from pathlib import Path
+from unittest.mock import patch
 
 import boto3
+from botocore.config import Config
 from moto import mock_aws
 
 from unicloud.aws.aws import S3, Bucket
 
 MY_TEST_BUCKET = "testing-unicloud"
 MOCK_BUCKET_NAME = "testing-fake-name"
+
+
+class TestCreateClient:
+    def test_create_client_default(self):
+        """Test creating a default S3 client."""
+        with patch.dict(
+            os.environ,
+            {
+                "AWS_ACCESS_KEY_ID": "test-key",
+                "AWS_SECRET_ACCESS_KEY": "test-secret",
+                "AWS_DEFAULT_REGION": "us-east-1",
+            },
+        ), patch("boto3.client") as mock_boto_client:
+            s3 = S3()
+            client = s3.client
+            mock_boto_client.assert_called_once_with(
+                service_name="s3",
+                region_name="us-east-1",
+                aws_access_key_id="test-key",
+                aws_secret_access_key="test-secret",
+            )
+            assert client == mock_boto_client.return_value
+
+    def test_create_client_with_config(self):
+        """Test creating an S3 client with custom configuration."""
+        custom_config = Config(signature_version="s3v4")
+        with patch.dict(
+            os.environ,
+            {
+                "AWS_ACCESS_KEY_ID": "test-key",
+                "AWS_SECRET_ACCESS_KEY": "test-secret",
+                "AWS_DEFAULT_REGION": "us-east-1",
+            },
+        ), patch("boto3.client") as mock_boto_client:
+            s3 = S3(configs={"config": custom_config})
+            client = s3.client
+            mock_boto_client.assert_called_once_with(
+                service_name="s3",
+                region_name="us-east-1",
+                aws_access_key_id="test-key",
+                aws_secret_access_key="test-secret",
+                config=custom_config,
+            )
+            assert client == mock_boto_client.return_value
 
 
 class TestS3Mock:
