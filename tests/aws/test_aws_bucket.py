@@ -163,17 +163,16 @@ class TestBucketE2E:
         """
         Test renaming a directory in the bucket.
         """
-        old_dir = "old_directory/"
-        new_dir = "new_directory/"
+        old_dir = "test-rename-old_directory/"
+        new_dir = "test-rename-new_directory/"
         local_dir = upload_test_data["local_dir"]
         self.bucket.upload(local_dir, old_dir, overwrite=True)
 
-        # Rename the directory
         self.bucket.rename(old_dir, new_dir)
 
         # Verify files under the new directory exist and old directory does not
         for file in upload_test_data["expected_files"]:
-            new_file = file.replace("upload-dir", "new_directory")
+            new_file = file.replace("upload-dir", "test-rename-new_directory")
             assert self.bucket.file_exists(new_file)
             assert not self.bucket.file_exists(file)
 
