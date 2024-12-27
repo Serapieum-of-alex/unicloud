@@ -3,7 +3,7 @@
 import logging
 import os
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import boto3
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError
@@ -18,6 +18,7 @@ class S3(CloudStorageFactory):
 
     def __init__(
         self,
+        configs: Optional[Dict] = None,
     ):
         """
         Initialize the AWS S3 client with credentials and region information.
@@ -25,19 +26,38 @@ class S3(CloudStorageFactory):
         - To initialize the `S3` client, you have to store the credentials in the following
         environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`.
 
+        Raises
+        ------
+        ValueError
+            If required environment variables for AWS credentials or region are not set.
+
+        Notes
+        -----
+        The client uses environment variables `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_DEFAULT_REGION`
+        for credentials and region configuration by default.
+
+        Examples
+        --------
+        Create a client with custom configuration:
+            >>> from botocore.config import Config
+            >>> s3 = S3(client_configs={
+            ...     'config': Config(signature_version='s3v4'),
+            ...     'region_name': 'us-west-2'
+            ... }) # doctest: +SKIP
+
         References
         ----------
         Set the environment variables required for the AWS CLI:
             https://docs.aws.amazon.com/cli/v1/userguide/cli-configure-envvars.html
         """
-        self._client = self.create_client()
+        self._client = self.create_client(configs)
 
     @property
     def client(self):
         """AWS S3 Client."""
         return self._client
 
-    def create_client(self):
+    def create_client(self, configs: Optional[Dict] = None) -> boto3.client:
         """Create and returns an AWS S3 client instance.
 
         initializing the AWS S3 client, passing credentials directly is one option. Another approach is to use AWS
@@ -46,6 +66,40 @@ class S3(CloudStorageFactory):
         production environments.
 
         Initialize the S3 client with AWS credentials and region.
+
+
+        Parameters
+        ----------
+        configs : dict, optional
+            Additional configuration parameters for the boto3 client.
+            For example, to set `Config` for unsigned requests:
+            `{'config': Config(signature_version=botocore.UNSIGNED)}`
+
+
+        Returns
+        -------
+        boto3.client
+            An AWS S3 client instance.
+
+        Raises
+        ------
+        ValueError
+            If required environment variables for AWS credentials or region are not set.
+
+        Notes
+        -----
+        The client uses environment variables `AWS_ACCESS_KEY_ID`,
+        `AWS_SECRET_ACCESS_KEY`, and `AWS_DEFAULT_REGION` for credentials
+        and region configuration by default.
+
+        Examples
+        --------
+        Create a client with custom configuration:
+            >>> from botocore.config import Config
+            >>> s3 = S3(client_configs={
+            ...     'config': Config(signature_version='s3v4'),
+            ...     'region_name': 'us-west-2'
+            ... })  # doctest: +SKIP
         """
         aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
         if aws_access_key_id is None:
@@ -59,13 +113,18 @@ class S3(CloudStorageFactory):
         if region is None:
             raise ValueError("AWS_DEFAULT_REGION is not set.")
 
+        # Set defaults and allow overrides through client_configs
+        client_params = {
+            "service_name": "s3",
+            "region_name": region,
+            "aws_access_key_id": aws_access_key_id,
+            "aws_secret_access_key": aws_secret_access_key,
+        }
+        if configs:
+            client_params.update(configs)
+
         try:
-            return boto3.client(
-                "s3",
-                region_name=region,
-                aws_access_key_id=aws_access_key_id,
-                aws_secret_access_key=aws_secret_access_key,
-            )
+            return boto3.client(**client_params)
         except (NoCredentialsError, PartialCredentialsError) as e:
             logger.error("AWS credentials not found.")
             raise e
