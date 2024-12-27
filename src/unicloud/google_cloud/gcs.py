@@ -1,6 +1,7 @@
 """Google Cloud Storage."""
 
 import fnmatch
+import logging
 import os
 from pathlib import Path
 from typing import List, Optional, Union
@@ -10,6 +11,8 @@ from google.oauth2 import service_account
 
 from unicloud.abstract_class import AbstractBucket, CloudStorageFactory
 from unicloud.utils import decode
+
+logger = logging.getLogger(__name__)
 
 
 class GCS(CloudStorageFactory):
@@ -204,7 +207,7 @@ class GCS(CloudStorageFactory):
         bucket = self.client.bucket(bucket_name)
         blob = bucket.blob(object_name)
         blob.upload_from_filename(local_path)
-        print(f"File {local_path} uploaded to {bucket_path}.")
+        logger.info(f"File {local_path} uploaded to {bucket_path}.")
 
     def download(self, cloud_path, local_path):
         """Download a file from GCS.
@@ -229,7 +232,7 @@ class GCS(CloudStorageFactory):
         bucket = self.client.bucket(bucket_name)
         blob = bucket.blob(object_name)
         blob.download_to_filename(local_path)
-        print(f"File {cloud_path} downloaded to {local_path}.")
+        logger.info(f"File {cloud_path} downloaded to {local_path}.")
 
     def get_bucket(self, bucket_id: str) -> "Bucket":
         """get_bucket.
@@ -507,7 +510,7 @@ class Bucket(AbstractBucket):
             )
 
         blob.upload_from_filename(str(local_path))
-        print(f"File '{local_path}' uploaded to '{bucket_path}'.")
+        logger.info(f"File '{local_path}' uploaded to '{bucket_path}'.")
 
     def _upload_directory(
         self, local_path: Path, bucket_path: str, overwrite: bool = False
@@ -686,7 +689,7 @@ class Bucket(AbstractBucket):
 
         local_path.parent.mkdir(parents=True, exist_ok=True)
         blob.download_to_filename(str(local_path))
-        print(f"File '{bucket_path}' downloaded to '{local_path}'.")
+        logger.info(f"File '{bucket_path}' downloaded to '{local_path}'.")
 
     def _download_directory(
         self, cloud_path: str, local_path: Union[str, Path], overwrite: bool = False
@@ -744,7 +747,7 @@ class Bucket(AbstractBucket):
 
             local_file_path.parent.mkdir(parents=True, exist_ok=True)
             blob.download_to_filename(local_file_path)
-            print(f"File '{blob.name}' downloaded to '{local_file_path}'.")
+            logger.info(f"File '{blob.name}' downloaded to '{local_file_path}'.")
 
     def delete(self, bucket_path: str):
         """
@@ -796,7 +799,7 @@ class Bucket(AbstractBucket):
         for blob in blobs:
             blob.delete()
             deleted_files.append(blob.name)
-            print(f"Deleted file: {blob.name}")
+            logger.info(f"Deleted file: {blob.name}")
 
         if not deleted_files:
             raise ValueError(f"No files found in the directory: {bucket_path}")
@@ -805,7 +808,7 @@ class Bucket(AbstractBucket):
         blob = self.bucket.blob(bucket_path)
         if blob.exists():
             blob.delete()
-            print(f"Blob {bucket_path} deleted.")
+            logger.info(f"Blob {bucket_path} deleted.")
         else:
             raise ValueError(f"File {bucket_path} not found in the bucket.")
 
@@ -869,4 +872,4 @@ class Bucket(AbstractBucket):
             # delete the original blob
             blob.delete()
 
-        print(f"Renamed '{old_path}' to '{new_path}'.")
+        logger.info(f"Renamed '{old_path}' to '{new_path}'.")

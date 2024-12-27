@@ -1,13 +1,16 @@
 """S3 Cloud Storage."""
 
+import logging
 import os
-import traceback
 from pathlib import Path
 from typing import List, Optional, Union
 
 import boto3
+from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 
 from unicloud.abstract_class import AbstractBucket, CloudStorageFactory
+
+logger = logging.getLogger(__name__)
 
 
 class S3(CloudStorageFactory):
@@ -56,12 +59,16 @@ class S3(CloudStorageFactory):
         if region is None:
             raise ValueError("AWS_DEFAULT_REGION is not set.")
 
-        return boto3.client(
-            "s3",
-            region_name=region,
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-        )
+        try:
+            return boto3.client(
+                "s3",
+                region_name=region,
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key,
+            )
+        except (NoCredentialsError, PartialCredentialsError) as e:
+            logger.error("AWS credentials not found.")
+            raise e
 
     def upload(self, local_path: Union[str, Path], bucket_path: str):
         """Upload a file to S3.
@@ -76,11 +83,10 @@ class S3(CloudStorageFactory):
         bucket_name, object_name = bucket_path.split("/", 1)
         try:
             self.client.upload_file(local_path, bucket_name, object_name)
+            logger.info(f"File {local_path} uploaded to {bucket_path}.")
         except Exception as e:
-            print("Error uploading file to S3:")
-            print(traceback.format_exc())
+            logger.error("Error uploading file to S3:", exc_info=True)
             raise e
-        print(f"File {local_path} uploaded to {bucket_path}.")
 
     def download(self, bucket_path: str, local_path: Union[str, Path]):
         """Download a file from S3.
@@ -93,8 +99,12 @@ class S3(CloudStorageFactory):
             The path to save the downloaded file.
         """
         bucket_name, object_name = bucket_path.split("/", 1)
-        self.client.download_file(bucket_name, object_name, local_path)
-        print(f"File {bucket_path} downloaded to {local_path}.")
+        try:
+            self.client.download_file(bucket_name, object_name, local_path)
+            logger.info(f"File {bucket_path} downloaded to {local_path}.")
+        except Exception as e:
+            logger.error("Error downloading file from S3:", exc_info=True)
+            raise e
 
     def get_bucket(self, bucket_name: str) -> "Bucket":
         """Retrieve a bucket object.
@@ -188,7 +198,6 @@ class Bucket(AbstractBucket):
         List[str]
             A list of file keys matching the prefix.
 
-
         Examples
         --------
         Create the S3 client and bucket:
@@ -263,7 +272,7 @@ class Bucket(AbstractBucket):
         if not overwrite and self.file_exists(bucket_path):
             raise ValueError(f"File {bucket_path} already exists in the bucket.")
         self.bucket.upload_file(Filename=str(local_path), Key=bucket_path)
-        print(f"File {local_path} uploaded to {bucket_path}.")
+        logger.info(f"File {local_path} uploaded to {bucket_path}.")
 
     def _upload_directory(self, local_path: Path, bucket_path: str, overwrite: bool):
         """Upload a directory recursively."""
@@ -328,7 +337,7 @@ class Bucket(AbstractBucket):
         local_path.parent.mkdir(parents=True, exist_ok=True)
 
         self.bucket.download_file(Key=bucket_path, Filename=str(local_path))
-        print(f"File {bucket_path} downloaded to {local_path}.")
+        logger.info(f"File {bucket_path} downloaded to {local_path}.")
 
     def _download_directory(self, bucket_path: str, local_path: Path, overwrite: bool):
         """Download a directory recursively."""
@@ -384,7 +393,7 @@ class Bucket(AbstractBucket):
         if not objects or objects[0].key != bucket_path:
             raise ValueError(f"File {bucket_path} not found in the bucket.")
         self.bucket.Object(bucket_path).delete()
-        print(f"Deleted: {bucket_path}")
+        logger.info(f"Deleted: {bucket_path}")
 
     def _delete_directory(self, bucket_path: str):
         """Delete a directory recursively."""
@@ -481,4 +490,4 @@ class Bucket(AbstractBucket):
             # delete the original object
             obj.delete()
 
-        print(f"Renamed '{old_path}' to '{new_path}'.")
+        logger.info(f"Renamed '{old_path}' to '{new_path}'.")
