@@ -13,6 +13,12 @@ class CloudStorageFactory(ABC):
         """Create the cloud storage client."""
         pass
 
+    @property
+    @abstractmethod
+    def client(self):
+        """Get the cloud storage client."""
+        pass
+
     @abstractmethod
     def upload(self, file_path, destination):
         """Upload data to the cloud storage.
@@ -30,6 +36,15 @@ class CloudStorageFactory(ABC):
         Parameters:
         - source: The source path in the cloud storage.
         - file_path: The path to save the downloaded file.
+        """
+        pass
+
+    @abstractmethod
+    def get_bucket(self, bucket_name) -> "AbstractBucket":
+        """Get a bucket from the cloud storage.
+
+        Parameters:
+        - bucket_name: The name of the bucket to get.
         """
         pass
 
