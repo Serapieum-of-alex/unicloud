@@ -43,7 +43,7 @@ Installing unicloud
 Installing `unicloud` from the `conda-forge` channel can be achieved by:
 
 ```
-conda install -c conda-forge unicloud=0.3.0
+conda install -c conda-forge unicloud=0.4.0
 ```
 
 It is possible to list all the versions of `unicloud` available on your platform with:
@@ -65,7 +65,25 @@ pip install git+https://github.com/Serapieum-of-alex/unicloud
 to install the last release, you can easily use pip
 
 ```
-pip install unicloud==0.3.0
+pip install unicloud==0.4.0
+```
+
+to install only the Google Cloud storage part, you can use the following command :
+
+```
+pip install unicloud[gcs]==0.4.0
+```
+
+to install only the AWS S3 part, you can use the following command :
+
+```
+pip install unicloud[s3]==0.4.0
+```
+
+to indtall all the dependencies, you can use the following command :
+
+```
+pip install unicloud[all]==0.4.0
 ```
 
 Quick start
