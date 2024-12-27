@@ -1,6 +1,8 @@
 """This module contains the abstract class for cloud storage factory."""
 
 from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import Union
 
 
 class CloudStorageFactory(ABC):
@@ -9,6 +11,12 @@ class CloudStorageFactory(ABC):
     @abstractmethod
     def create_client(self):
         """Create the cloud storage client."""
+        pass
+
+    @property
+    @abstractmethod
+    def client(self):
+        """Get the cloud storage client."""
         pass
 
     @abstractmethod
@@ -29,4 +37,65 @@ class CloudStorageFactory(ABC):
         - source: The source path in the cloud storage.
         - file_path: The path to save the downloaded file.
         """
+        pass
+
+    @abstractmethod
+    def get_bucket(self, bucket_name) -> "AbstractBucket":
+        """Get a bucket from the cloud storage.
+
+        Parameters:
+        - bucket_name: The name of the bucket to get.
+        """
+        pass
+
+
+class AbstractBucket(ABC):
+    """Abstract class for cloud storage bucket."""
+
+    @abstractmethod
+    def __str__(self):
+        """Return the name of the bucket."""
+        pass
+
+    @abstractmethod
+    def __repr__(self):
+        """Return the name of the bucket."""
+        pass
+
+    @abstractmethod
+    def upload(
+        self,
+        local_path: Union[str, Path],
+        bucket_path: Union[str, Path],
+        overwrite: bool = False,
+    ):
+        """Upload a file/directory to the bucket."""
+        pass
+
+    @abstractmethod
+    def download(
+        self, bucket_path: str, local_path: Union[str, Path], overwrite: bool = False
+    ):
+        """Download a file/directory from the bucket."""
+        pass
+
+    @abstractmethod
+    def delete(self, bucket_path: str):
+        """Delete a file/directory from the bucket."""
+        pass
+
+    @abstractmethod
+    def list_files(self):
+        """List the files/directory in the bucket."""
+        pass
+
+    @abstractmethod
+    def file_exists(self, file_name: str) -> bool:
+        """Check if a file/directory exists in the bucket."""
+        pass
+
+    @property
+    @abstractmethod
+    def name(self):
+        """Get the name of the bucket."""
         pass

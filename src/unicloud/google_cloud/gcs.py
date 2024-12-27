@@ -1,6 +1,7 @@
 """Google Cloud Storage."""
 
 import fnmatch
+import logging
 import os
 from pathlib import Path
 from typing import List, Optional, Union
@@ -8,8 +9,10 @@ from typing import List, Optional, Union
 from google.cloud import storage
 from google.oauth2 import service_account
 
-from unicloud.abstract_class import CloudStorageFactory
+from unicloud.abstract_class import AbstractBucket, CloudStorageFactory
 from unicloud.utils import decode
+
+logger = logging.getLogger(__name__)
 
 
 class GCS(CloudStorageFactory):
@@ -44,7 +47,6 @@ class GCS(CloudStorageFactory):
                         'https://www.googleapis.com/auth/devstorage.full_control',
                         'https://www.googleapis.com/auth/devstorage.read_only',
                         'https://www.googleapis.com/auth/devstorage.read_write'
-                        )
                     )
             <BlankLine>
 
@@ -152,7 +154,7 @@ class GCS(CloudStorageFactory):
 
         Returns
         -------
-        google cloud storage client object
+        Google Cloud storage client object
 
         Raises
         ------
@@ -176,8 +178,8 @@ class GCS(CloudStorageFactory):
             client = storage.Client.from_service_account_info(service_key_content)
         else:
             raise ValueError(
-                "Since the GOOGLE_APPLICATION_CREDENTIALS and the EE_PRIVATE_KEY and EE_SERVICE_ACCOUNT are not in your"
-                "env variables you have to provide a path to your service account"
+                "Since the GOOGLE_APPLICATION_CREDENTIALS and the SERVICE_KEY_CONTENT are not in your env variables "
+                "you have to provide a path to your service account"
             )
 
         return client
@@ -205,7 +207,7 @@ class GCS(CloudStorageFactory):
         bucket = self.client.bucket(bucket_name)
         blob = bucket.blob(object_name)
         blob.upload_from_filename(local_path)
-        print(f"File {local_path} uploaded to {bucket_path}.")
+        logger.info(f"File {local_path} uploaded to {bucket_path}.")
 
     def download(self, cloud_path, local_path):
         """Download a file from GCS.
@@ -230,7 +232,7 @@ class GCS(CloudStorageFactory):
         bucket = self.client.bucket(bucket_name)
         blob = bucket.blob(object_name)
         blob.download_to_filename(local_path)
-        print(f"File {cloud_path} downloaded to {local_path}.")
+        logger.info(f"File {cloud_path} downloaded to {local_path}.")
 
     def get_bucket(self, bucket_id: str) -> "Bucket":
         """get_bucket.
@@ -260,7 +262,7 @@ class GCS(CloudStorageFactory):
         return Bucket(bucket)
 
 
-class Bucket:
+class Bucket(AbstractBucket):
     """GCSBucket."""
 
     def __init__(self, bucket: storage.bucket.Bucket):
@@ -269,11 +271,16 @@ class Bucket:
 
     def __str__(self):
         """__str__."""
-        return f"Bucket: {self.bucket.name}"
+        return f"Bucket: {self.name}"
 
     def __repr__(self):
         """__repr__."""
-        return f"Bucket: {self.bucket.name}"
+        return f"Bucket: {self.name}"
+
+    @property
+    def name(self):
+        """name."""
+        return self.bucket.name
 
     @property
     def bucket(self) -> storage.bucket.Bucket:
@@ -461,7 +468,7 @@ class Bucket:
         bucket_path : str
             The destination path in the GCS bucket.
         overwrite : bool
-            If True, overwrites the file if it already exists in the bucket. If False, raises
+            If True, the method overwrites the file if it already exists in the bucket. If False, raises
             a `ValueError` if the destination file already exists.
 
         Raises
@@ -503,7 +510,7 @@ class Bucket:
             )
 
         blob.upload_from_filename(str(local_path))
-        print(f"File '{local_path}' uploaded to '{bucket_path}'.")
+        logger.info(f"File '{local_path}' uploaded to '{bucket_path}'.")
 
     def _upload_directory(
         self, local_path: Path, bucket_path: str, overwrite: bool = False
@@ -528,6 +535,8 @@ class Bucket:
             If the `local_path` does not exist or is not a directory.
         ValueError
             If any destination file exists in the bucket and `overwrite` is False.
+        ValueError
+            If the directory is empty.
 
         Examples
         --------
@@ -553,6 +562,9 @@ class Bucket:
             ...     print(e)
             "The file 'bucket/folder/subdir/file.txt' already exists in the bucket and overwrite is set to False."
         """
+        if local_path.is_dir() and not any(local_path.iterdir()):
+            raise ValueError(f"Directory {local_path} is empty.")
+
         for file in local_path.rglob("*"):
             if file.is_file():
                 relative_path = file.relative_to(local_path)
@@ -561,7 +573,9 @@ class Bucket:
                 )
                 self._upload_file(file, bucket_file_path, overwrite)
 
-    def download(self, file_name: str, local_path: str, overwrite: bool = False):
+    def download(
+        self, bucket_path: str, local_path: Union[Path, str], overwrite: bool = False
+    ):
         """Download a file from GCS.
 
         Downloads a file from a Google Cloud Storage bucket to a local directory or path.
@@ -572,7 +586,7 @@ class Bucket:
 
         Parameters
         ----------
-        file_name : str
+        bucket_path : str
             The name of the file or directory to download from the GCS bucket.
             - For a single file, provide its name (e.g., "example.txt").
             - For a directory, provide its name ending with a '/' (e.g., "data/").
@@ -621,10 +635,10 @@ class Bucket:
         upload : To upload a file from a local path to a GCS bucket.
 
         """
-        if file_name.endswith("/"):
-            self._download_directory(file_name, local_path, overwrite)
+        if bucket_path.endswith("/"):
+            self._download_directory(bucket_path, local_path, overwrite)
         else:
-            self._download_file(file_name, local_path, overwrite)
+            self._download_file(bucket_path, local_path, overwrite)
 
     def _download_file(
         self, bucket_path: str, local_path: Union[str, Path], overwrite: bool = False
@@ -675,7 +689,7 @@ class Bucket:
 
         local_path.parent.mkdir(parents=True, exist_ok=True)
         blob.download_to_filename(str(local_path))
-        print(f"File '{bucket_path}' downloaded to '{local_path}'.")
+        logger.info(f"File '{bucket_path}' downloaded to '{local_path}'.")
 
     def _download_directory(
         self, cloud_path: str, local_path: Union[str, Path], overwrite: bool = False
@@ -733,9 +747,9 @@ class Bucket:
 
             local_file_path.parent.mkdir(parents=True, exist_ok=True)
             blob.download_to_filename(local_file_path)
-            print(f"File '{blob.name}' downloaded to '{local_file_path}'.")
+            logger.info(f"File '{blob.name}' downloaded to '{local_file_path}'.")
 
-    def delete(self, file_path: str):
+    def delete(self, bucket_path: str):
         """
         Delete a file or all files in a directory from the GCS bucket.
 
@@ -745,7 +759,7 @@ class Bucket:
 
         Parameters
         ----------
-        file_path : str
+        bucket_path : str
             The path to the file or directory in the GCS bucket.
             - For a single file, provide the file name (e.g., "example.txt").
             - For a directory, provide the path ending with '/' (e.g., "data/").
@@ -774,22 +788,88 @@ class Bucket:
         - For directories, all files and subdirectories are deleted recursively.
         - Deleting a non-existent file or directory raises a `ValueError`.
         """
-        if file_path.endswith("/"):
-            # Delete all files in the directory
-            blobs = self.bucket.list_blobs(prefix=file_path)
-            deleted_files = []
-            for blob in blobs:
-                blob.delete()
-                deleted_files.append(blob.name)
-                print(f"Deleted file: {blob.name}")
-
-            if not deleted_files:
-                raise ValueError(f"No files found in the directory: {file_path}")
+        if bucket_path.endswith("/"):
+            self._delete_directory(bucket_path)
         else:
-            # Delete a single file
-            blob = self.bucket.blob(file_path)
-            if blob.exists():
-                blob.delete()
-                print(f"Blob {file_path} deleted.")
-            else:
-                raise ValueError(f"File {file_path} not found in the bucket.")
+            self._delete_file(bucket_path)
+
+    def _delete_directory(self, bucket_path: str):
+        blobs = self.bucket.list_blobs(prefix=bucket_path)
+        deleted_files = []
+        for blob in blobs:
+            blob.delete()
+            deleted_files.append(blob.name)
+            logger.info(f"Deleted file: {blob.name}")
+
+        if not deleted_files:
+            raise ValueError(f"No files found in the directory: {bucket_path}")
+
+    def _delete_file(self, bucket_path: str):
+        blob = self.bucket.blob(bucket_path)
+        if blob.exists():
+            blob.delete()
+            logger.info(f"Blob {bucket_path} deleted.")
+        else:
+            raise ValueError(f"File {bucket_path} not found in the bucket.")
+
+    def rename(self, old_path: str, new_path: str):
+        """
+        Rename a file or directory in the GCS bucket.
+
+        This operation renames a file or directory by copying the content to a new path
+        and then deleting the original path.
+
+        Parameters
+        ----------
+        old_path : str
+            The current path of the file or directory in the bucket.
+        new_path : str
+            The new path for the file or directory in the bucket.
+
+        Raises
+        ------
+        ValueError
+            If the source file or directory does not exist.
+            If the destination path already exists.
+
+        Notes
+        -----
+        - For directories, all files and subdirectories are renamed recursively.
+        - The operation is atomic for individual files but not for directories.
+
+        Examples
+        --------
+        First get you bucket:
+            >>> Bucket_ID = "test-bucket"
+            >>> PROJECT_ID = "py-project-id"
+            >>> gcs = GCS(PROJECT_ID) # doctest: +SKIP
+            >>> my_bucket = gcs.get_bucket(Bucket_ID) # doctest: +SKIP
+
+        Rename a file:
+            >>> my_bucket.rename("bucket/old_file.txt", "bucket/new_file.txt") # doctest: +SKIP
+
+        Rename a directory:
+            >>> my_bucket.rename("bucket/old_dir/", "bucket/new_dir/") # doctest: +SKIP
+        """
+        # Check if the old path exists
+        blobs = list(self.bucket.list_blobs(prefix=old_path))
+        if not blobs:
+            raise ValueError(f"The path '{old_path}' does not exist in the bucket.")
+
+        # Check if the new path already exists
+        if any(self.bucket.list_blobs(prefix=new_path)):
+            raise ValueError(f"The destination path '{new_path}' already exists.")
+
+        # Perform the rename
+        for blob in blobs:
+            old_blob_name = blob.name
+            if old_path.endswith("/") and not old_blob_name.startswith(old_path):
+                continue  # Skip unrelated files
+            new_blob_name = old_blob_name.replace(old_path, new_path, 1)
+            # create a copy of the blob to the new path
+            new_blob = self.bucket.blob(new_blob_name)
+            new_blob.rewrite(blob)
+            # delete the original blob
+            blob.delete()
+
+        logger.info(f"Renamed '{old_path}' to '{new_path}'.")

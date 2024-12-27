@@ -1,9 +1,10 @@
 import fnmatch
 import os
 import shutil
+import unittest
 from pathlib import Path
 from typing import Dict
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 from google.cloud import storage
@@ -38,6 +39,9 @@ class TestGCSBucketE2E:
         assert not self.bucket.file_exists("non_existent_file.geojson")
 
     def test_upload_file(self, test_file: Path):
+        """
+        Test uploading a single file to the bucket.
+        """
         bucket_path = f"test-upload-gcs-bucket-{test_file.name}"
         self.bucket.upload(test_file, bucket_path)
         assert any(blob.name == bucket_path for blob in self.bucket.bucket.list_blobs())
@@ -82,6 +86,41 @@ class TestGCSBucketE2E:
         self.bucket.upload(str(test_file), str(test_file))
         self.bucket.delete(str(test_file))
         assert str(test_file) not in self.bucket.list_files()
+
+    def test_rename_file(self, test_file: Path):
+        """
+        Test renaming a single file in the bucket.
+        """
+        old_name = "test-rename-old-file.txt"
+        new_name = "test-rename-new-file.txt"
+        self.bucket.upload(test_file, old_name, overwrite=True)
+
+        self.bucket.rename(old_name, new_name)
+
+        # Verify the new file exists and the old file does not
+        assert self.bucket.file_exists(new_name)
+        assert not self.bucket.file_exists(old_name)
+        self.bucket.delete(new_name)
+
+    def test_rename_directory(self, upload_test_data: Dict[str, Path]):
+        """
+        Test renaming a directory in the bucket.
+        """
+        old_dir = "old_directory/"
+        new_dir = "new_directory/"
+        local_dir = upload_test_data["local_dir"]
+        self.bucket.upload(local_dir, old_dir, overwrite=True)
+
+        # Rename the directory
+        self.bucket.rename(old_dir, new_dir)
+
+        # Verify files under the new directory exist and old directory does not
+        for file in upload_test_data["expected_files"]:
+            new_file = file.replace("upload-dir", "new_directory")
+            assert self.bucket.file_exists(new_file)
+            assert not self.bucket.file_exists(file)
+
+        self.bucket.delete(new_dir)
 
 
 @pytest.mark.mock
@@ -196,6 +235,9 @@ class TestListFilesMock:
 
 
 class TestDeleteE2E:
+    """
+    End-to-End tests for the Bucket class delete method.
+    """
 
     @pytest.fixture
     def gcs_bucket(self) -> Bucket:
@@ -241,6 +283,23 @@ class TestDeleteE2E:
             ValueError, match=f"No files found in the directory: {directory}"
         ):
             gcs_bucket.delete(directory)
+
+
+class TestPropertiesMock:
+
+    def setup_method(self):
+        self.mock_bucket = MagicMock()
+        self.mock_bucket.name = "test_bucket"
+        self.gcs_bucket = Bucket(self.mock_bucket)
+
+    def test_name_property(self):
+        assert self.gcs_bucket.name == "test_bucket"
+
+    def test__str__(self):
+        assert str(self.gcs_bucket) == "Bucket: test_bucket"
+
+    def test__repr__(self):
+        assert str(self.gcs_bucket.__repr__()) == "Bucket: test_bucket"
 
 
 class TestDownloadMock:
@@ -339,9 +398,9 @@ class TestUploadMock:
         with (
             patch("pathlib.Path.exists", return_value=True),
             patch("pathlib.Path.is_dir", return_value=True),
+            patch("pathlib.Path.iterdir", return_value=files),
             patch("pathlib.Path.rglob", return_value=files),
         ):
-
             # Mock individual file checks and uploads
             with patch("pathlib.Path.is_file", side_effect=[False, True, True, True]):
                 gcs_bucket.upload(local_directory, bucket_path, overwrite=True)
@@ -423,3 +482,62 @@ class TestDeleteMock:
             gcs_bucket.delete(directory)
 
         mock_bucket.list_blobs.assert_called_once_with(prefix=directory)
+
+
+class TestGCSBucketRename(unittest.TestCase):
+    def setUp(self):
+        self.mock_bucket = MagicMock()
+        self.bucket = Bucket(self.mock_bucket)
+
+    def test_rename_file(self):
+        # Mock the list_blobs method to return a single file
+        old_blob = MagicMock(name="old_path/file.txt")
+        self.mock_bucket.list_blobs.side_effect = [[old_blob], []]
+
+        # Call the rename method
+        self.bucket.rename("old_path/file.txt", "new_path/file.txt")
+
+        # Verify the copy and delete operations
+        self.mock_bucket.blob("new_path/file.txt").rewrite.assert_called_once_with(
+            old_blob
+        )
+        old_blob.delete.assert_called_once()
+
+    def test_rename_directory(self):
+        # Mock the list_blobs method to return multiple files in a directory
+        old_blob_1 = MagicMock(name="old_path/dir/file1.txt")
+        old_blob_2 = MagicMock(name="old_path/dir/file2.txt")
+        self.mock_bucket.list_blobs.side_effect = [[old_blob_1, old_blob_2], []]
+
+        # Call the rename method
+        self.bucket.rename("old_path/dir/", "new_path/dir/")
+
+        # Verify the copy and delete operations for each file
+        expected_calls = [call(old_blob_1), call(old_blob_2)]
+        self.mock_bucket.blob("new_path/dir/file1.txt").rewrite.assert_has_calls(
+            [expected_calls[0]]
+        )
+        self.mock_bucket.blob("new_path/dir/file2.txt").rewrite.assert_has_calls(
+            [expected_calls[1]]
+        )
+        old_blob_1.delete.assert_called_once()
+        old_blob_2.delete.assert_called_once()
+
+    def test_rename_nonexistent_path(self):
+        # Mock the list_blobs method to return an empty list
+        self.mock_bucket.list_blobs.return_value = []
+
+        # Verify that ValueError is raised
+        with self.assertRaises(ValueError):
+            self.bucket.rename("nonexistent_path/", "new_path/")
+
+    def test_rename_to_existing_path(self):
+        # Mock the list_blobs method to return a single file for both old and new paths
+        self.mock_bucket.list_blobs.side_effect = [
+            [MagicMock(name="old_path/file.txt")],
+            [MagicMock(name="new_path/file.txt")],
+        ]
+
+        # Verify that ValueError is raised
+        with self.assertRaises(ValueError):
+            self.bucket.rename("old_path/file.txt", "new_path/file.txt")
